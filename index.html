@@ -151,8 +151,14 @@ newRef.set(orderData).then(()=>{
 }).catch(err=>{alert("Xato: zakaz yuborilmadi. Internetni tekshirib qayta urinib ko'ring.");console.error(err)});
 }
 
-function show(id){document.getElementById("shop").classList.toggle("hidden",id!=="shop"||!auth.currentUser||isAdminUser());document.getElementById("myorders").classList.toggle("hidden",id!=="myorders");document.getElementById("admin").classList.toggle("hidden",id!=="admin");
-  document.getElementById("custAuth").classList.toggle("hidden",!(id==="shop"&&(!auth.currentUser||isAdminUser())));
+let currentTab="shop";
+function show(id){
+  currentTab=id;
+  let loggedInCustomer=auth.currentUser && auth.currentUser.uid!==ADMIN_UID;
+  document.getElementById("shop").classList.toggle("hidden",!(id==="shop"&&loggedInCustomer));
+  document.getElementById("custAuth").classList.toggle("hidden",!(id==="shop"&&!loggedInCustomer));
+  document.getElementById("myorders").classList.toggle("hidden",id!=="myorders");
+  document.getElementById("admin").classList.toggle("hidden",id!=="admin");
 }
 function isAdminUser(){return auth.currentUser&&auth.currentUser.uid===ADMIN_UID}
 
@@ -235,7 +241,7 @@ auth.onAuthStateChanged(user=>{
     document.getElementById("custAuth").classList.remove("hidden");
     document.getElementById("myOrdersList").innerHTML="<p>Zakazlaringizni ko'rish uchun avval kiring.</p>";
   }
-  show(document.getElementById("shop").classList.contains("hidden")?(document.getElementById("myorders").classList.contains("hidden")?"admin":"myorders"):"shop");
+  show(currentTab);
 });
 
 let ordersListenerRef=null;
@@ -269,4 +275,6 @@ function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){db.ref("o
 function togglePaymentInfo(){document.getElementById("cardInfo").classList.toggle("hidden",document.getElementById("payment").value!=="Karta")}
 function toggleAddress(){document.getElementById("addressBox").classList.toggle("hidden",document.getElementById("deliveryType").value!=="Yetkazib berish")}
 switchAuthTab("login");
-rend
+render();
+</script></body></html>
+                                       
