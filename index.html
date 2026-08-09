@@ -12,14 +12,26 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
 .nav{display:flex;gap:8px;margin-bottom:15px}.nav button{flex:1}.hidden{display:none}.orderbox{border-left:5px solid #8b1e16;padding:12px;margin:12px 0;background:#fff}
 .status{font-weight:bold}.danger{background:#f4c7c7}.success{background:#dff2df;padding:12px;border-radius:9px;display:none}
 .qty{width:50px;text-align:center;margin:0;padding:8px 4px}
-.track-result{margin-top:12px}
 .loading{text-align:center;padding:20px;color:#8b1e16}
+.tab{background:#f0e0d1;width:auto;padding:8px 16px;margin-bottom:0}.tab.active{background:#8b1e16;color:#fff}
 </style></head><body>
 <header><h1>🥟 Baqachorsu Kishmish Somsa</h1><div>08:00–14:30</div><div>Qo‘qon shahar, Navoiy, Saodat masjid filiali</div></header>
 <main>
-<div class="nav"><button onclick="show('shop')">Zakaz berish</button><button onclick="show('track')">Zakazni tekshirish</button><button onclick="show('admin')">Admin panel</button></div>
+<div class="nav"><button onclick="show('shop')">Zakaz berish</button><button onclick="show('myorders')">Zakazlarim</button><button onclick="show('admin')">Admin panel</button></div>
 
-<section id="shop"><h2>Somsa tanlang</h2><div class="grid" id="menu"><div class="loading">Yuklanmoqda...</div></div>
+<!-- MIJOZ LOGIN/ROYXATDAN OTISH -->
+<section id="custAuth" class="box">
+  <h2>👤 Kirish / Ro‘yxatdan o‘tish</h2>
+  <p style="font-size:14px;color:#666">Zakaz berish uchun avval ro‘yxatdan o‘ting yoki hisobingizga kiring.</p>
+  <div class="nav"><button class="tab" id="tabLogin" onclick="switchAuthTab('login')">Kirish</button><button class="tab" id="tabReg" onclick="switchAuthTab('register')">Ro‘yxatdan o‘tish</button></div>
+  <div id="regFields"><input id="regName" placeholder="Ismingiz"></div>
+  <input id="authPhone" placeholder="Telefon (masalan +998901234567)">
+  <input id="authPass" type="password" placeholder="Parol (kamida 6 ta belgi)">
+  <button class="order" onclick="doCustomerAuth()">Davom etish</button>
+  <div id="authMsg" style="color:#8b1e16;font-weight:bold;margin-top:8px"></div>
+</section>
+
+<section id="shop" class="hidden"><h2>Somsa tanlang</h2><div class="grid" id="menu"><div class="loading">Yuklanmoqda...</div></div>
 <div class="box"><h2>Ma’lumotlar</h2><input id="name" placeholder="Ism"><input id="phone" placeholder="Telefon">
 <select id="deliveryType" onchange="toggleAddress()"><option value="Yetkazib berish">🚗 Yetkazib berish</option><option value="Olib ketish">🏠 O'zim olib ketaman</option></select>
 <div id="addressBox"><textarea id="address" placeholder="Manzil"></textarea></div>
@@ -35,10 +47,7 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
 <div id="summary"></div>
 <button class="order" onclick="placeOrder()">Zakaz berish</button><div class="success" id="ok"></div></div></section>
 
-<section id="track" class="hidden"><div class="box"><h2>📦 Zakazni tekshirish</h2>
-<p>Zakaz berganingizda chiqqan <b>zakaz raqamini</b> kiriting.</p>
-<input id="trackId" placeholder="Zakaz raqami"><button class="order" onclick="trackOrder()">Tekshirish</button>
-<div class="track-result" id="trackResult"></div></div></section>
+<section id="myorders" class="hidden"><div class="box"><h2>📦 Zakazlarim</h2><div id="myOrdersList"><p>Yuklanmoqda...</p></div></div></section>
 
 <section id="admin" class="hidden"><div class="box" id="loginBox"><h2>🔐 Admin panel</h2>
 <input id="adminEmail" placeholder="Admin email" type="email"><input id="pass" type="password" placeholder="Admin paroli"><button onclick="login()">Kirish</button>
@@ -64,6 +73,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
+const ADMIN_UID = "GRIN9vTXXUXeshdxNIC1XFUOKbG2";
 /* ================================= */
 
 /* ===== TELEGRAM SOZLAMALARI ===== */
@@ -78,7 +88,8 @@ const money=n=>n.toLocaleString("uz-UZ")+" so‘m";
 let stockState=products.map(()=>true);
 let pricesState=products.map(x=>x[1]);
 let imagesState=products.map(()=>null);
-let ordersState=[]; // faqat admin login qilgach to'ladi
+let ordersState=[]; // admin uchun
+let myOrdersState=[]; // mijoz uchun
 
 // --- Real-vaqtda tinglovchilar: hamma o'qiy oladi (mavjudlik, narx, rasm) ---
 db.ref("stock").on("value",snap=>{let v=snap.val();stockState=v&&v.length===products.length?v:products.map(()=>true);render()});
@@ -128,51 +139,103 @@ async function sendToTelegram(o){
   }catch(e){console.error("Telegramga ulanishda xato:",e)}
 }
 
-function placeOrder(){let prices=getPrices(),total=cart.reduce((a,q,i)=>a+q*prices[i],0),name=document.getElementById("name").value.trim(),phone=document.getElementById("phone").value.trim(),deliveryType=document.getElementById("deliveryType").value,address=document.getElementById("address").value.trim(),wantDate=document.getElementById("wantDate").value,wantTime=document.getElementById("wantTime").value;if(!total)return alert("Somsa tanlang.");if(!name||!phone)return alert("Ism va telefonni kiriting.");if(deliveryType==="Yetkazib berish"&&!address)return alert("Yetkazib berish uchun manzilni kiriting.");if(!wantDate)return alert("Zakazni qaysi sanaga xohlaysiz — sanani kiriting.");if(!wantTime)return alert("Zakazni qaysi soatga xohlaysiz — vaqtni kiriting.");
-let orderData={name,phone,deliveryType,address,payment:document.getElementById("payment").value,wantDate,wantTime,items:products.map((p,i)=>({name:p[0],qty:cart[i],price:prices[i]})).filter(x=>x.qty),total,status:"Yangi",time:new Date().toLocaleString("uz-UZ"),ts:Date.now()};
+function placeOrder(){
+  if(!auth.currentUser){alert("Avval kirish/ro'yxatdan o'ting.");show('shop');return}
+  let prices=getPrices(),total=cart.reduce((a,q,i)=>a+q*prices[i],0),name=document.getElementById("name").value.trim(),phone=document.getElementById("phone").value.trim(),deliveryType=document.getElementById("deliveryType").value,address=document.getElementById("address").value.trim(),wantDate=document.getElementById("wantDate").value,wantTime=document.getElementById("wantTime").value;if(!total)return alert("Somsa tanlang.");if(!name||!phone)return alert("Ism va telefonni kiriting.");if(deliveryType==="Yetkazib berish"&&!address)return alert("Yetkazib berish uchun manzilni kiriting.");if(!wantDate)return alert("Zakazni qaysi sanaga xohlaysiz — sanani kiriting.");if(!wantTime)return alert("Zakazni qaysi soatga xohlaysiz — vaqtni kiriting.");
+let orderData={ownerId:auth.currentUser.uid,name,phone,deliveryType,address,payment:document.getElementById("payment").value,wantDate,wantTime,items:products.map((p,i)=>({name:p[0],qty:cart[i],price:prices[i]})).filter(x=>x.qty),total,status:"Yangi",time:new Date().toLocaleString("uz-UZ"),ts:Date.now()};
 let newRef=db.ref("orders").push();
 newRef.set(orderData).then(()=>{
   let o={...orderData,id:newRef.key};
   sendToTelegram(o);
-  cart.fill(0);render();document.getElementById("address").value="";document.getElementById("wantDate").value="";document.getElementById("wantTime").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Zakaz qabul qilindi!<br>Zakaz raqamingiz: <b>${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;show("shop");
+  cart.fill(0);render();document.getElementById("address").value="";document.getElementById("wantDate").value="";document.getElementById("wantTime").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Zakaz qabul qilindi!<br>Zakaz raqamingiz: <b>${o.id}</b>`;show("shop");
 }).catch(err=>{alert("Xato: zakaz yuborilmadi. Internetni tekshirib qayta urinib ko'ring.");console.error(err)});
 }
 
-function trackOrder(){
-  let id=document.getElementById("trackId").value.trim();
-  let box=document.getElementById("trackResult");
-  if(!id){box.innerHTML="Iltimos, zakaz raqamini kiriting.";return}
-  box.innerHTML="Qidirilmoqda...";
-  db.ref("orders/"+id).once("value").then(snap=>{
-    let o=snap.val();
-    if(!o){box.innerHTML="❌ Bunday raqamli zakaz topilmadi.";return}
-    box.innerHTML=`<div class="orderbox"><b>#${id}</b> — ${o.time}<br>👤 ${o.name}<br>⏰ Kerakli sana/vaqt: ${o.wantDate} ${o.wantTime}<hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}</div><div class="status">Holat: ${o.status}</div></div>`;
-  }).catch(()=>{box.innerHTML="❌ Qidirishda xato. Internetni tekshiring."});
+function show(id){document.getElementById("shop").classList.toggle("hidden",id!=="shop"||!auth.currentUser||isAdminUser());document.getElementById("myorders").classList.toggle("hidden",id!=="myorders");document.getElementById("admin").classList.toggle("hidden",id!=="admin");
+  document.getElementById("custAuth").classList.toggle("hidden",!(id==="shop"&&(!auth.currentUser||isAdminUser())));
+}
+function isAdminUser(){return auth.currentUser&&auth.currentUser.uid===ADMIN_UID}
+
+/* ---- Mijoz: ro'yxatdan o'tish / kirish (telefon+parol) ---- */
+let authMode="login";
+function switchAuthTab(mode){authMode=mode;document.getElementById("regFields").classList.toggle("hidden",mode!=="register");document.getElementById("tabLogin").classList.toggle("active",mode==="login");document.getElementById("tabReg").classList.toggle("active",mode==="register");document.getElementById("authMsg").textContent=""}
+function normPhone(v){return v.replace(/[^0-9+]/g,"")}
+function phoneToEmail(p){return normPhone(p).replace("+","")+"@kishmish.local"}
+function doCustomerAuth(){
+  let phone=document.getElementById("authPhone").value.trim(),pass=document.getElementById("authPass").value,name=document.getElementById("regName").value.trim();
+  let msg=document.getElementById("authMsg");msg.textContent="";
+  if(!phone||!pass){msg.textContent="Telefon va parolni kiriting.";return}
+  if(pass.length<6){msg.textContent="Parol kamida 6 ta belgidan iborat bo'lishi kerak.";return}
+  let email=phoneToEmail(phone);
+  if(authMode==="register"){
+    if(!name){msg.textContent="Ismingizni kiriting.";return}
+    auth.createUserWithEmailAndPassword(email,pass).then(cred=>{
+      cred.user.updateProfile({displayName:name});
+      document.getElementById("name").value=name;
+      document.getElementById("phone").value=normPhone(phone);
+    }).catch(err=>{
+      if(err.code==="auth/email-already-in-use")msg.textContent="Bu telefon raqami bilan hisob allaqachon mavjud. 'Kirish' bo'limidan kiring.";
+      else msg.textContent="Xato: "+err.message;
+    });
+  }else{
+    auth.signInWithEmailAndPassword(email,pass).then(cred=>{
+      document.getElementById("phone").value=normPhone(phone);
+      if(cred.user.displayName)document.getElementById("name").value=cred.user.displayName;
+    }).catch(()=>{msg.textContent="Telefon yoki parol noto'g'ri.";});
+  }
+}
+function customerLogout(){auth.signOut()}
+
+/* ---- Zakazlarim ---- */
+let myOrdersRef=null;
+function listenMyOrders(uid){
+  if(myOrdersRef)myOrdersRef.off();
+  myOrdersRef=db.ref("orders").orderByChild("ownerId").equalTo(uid);
+  myOrdersRef.on("value",snap=>{
+    let val=snap.val()||{};
+    myOrdersState=Object.keys(val).map(k=>({id:k,...val[k]})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    renderMyOrders();
+  });
+}
+function renderMyOrders(){
+  document.getElementById("myOrdersList").innerHTML=myOrdersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>⏰ ${o.wantDate} ${o.wantTime}<hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}</div><div class="status">Holat: ${o.status}</div></div>`).join("")||"<p>Hozircha zakazingiz yo‘q.</p>";
 }
 
-function show(id){document.getElementById("shop").classList.toggle("hidden",id!=="shop");document.getElementById("track").classList.toggle("hidden",id!=="track");document.getElementById("admin").classList.toggle("hidden",id!=="admin")}
-
+/* ---- Admin login (email+parol) ---- */
 function login(){
   let email=document.getElementById("adminEmail").value.trim(),pass=document.getElementById("pass").value;
   document.getElementById("loginMsg").textContent="";
   if(!email||!pass){document.getElementById("loginMsg").textContent="Email va parolni kiriting.";return}
-  auth.signInWithEmailAndPassword(email,pass).catch(err=>{
-    document.getElementById("loginMsg").textContent="Email yoki parol noto‘g‘ri.";
-  });
+  auth.signInWithEmailAndPassword(email,pass).catch(()=>{document.getElementById("loginMsg").textContent="Email yoki parol noto‘g‘ri.";});
 }
 function logout(){auth.signOut()}
 
+/* ---- Umumiy auth holati ---- */
 auth.onAuthStateChanged(user=>{
-  if(user){
+  if(user && user.uid===ADMIN_UID){
+    // ADMIN
     document.getElementById("loginBox").classList.add("hidden");
     document.getElementById("panel").classList.remove("hidden");
     document.getElementById("whoAmI").textContent=user.email;
     listenOrders();
-  }else{
+    document.getElementById("custAuth").classList.add("hidden");
+  }else if(user){
+    // MIJOZ
     document.getElementById("loginBox").classList.remove("hidden");
     document.getElementById("panel").classList.add("hidden");
     if(ordersListenerRef){ordersListenerRef.off();ordersListenerRef=null}
+    document.getElementById("custAuth").classList.add("hidden");
+    listenMyOrders(user.uid);
+  }else{
+    // Hech kim kirmagan
+    document.getElementById("loginBox").classList.remove("hidden");
+    document.getElementById("panel").classList.add("hidden");
+    if(ordersListenerRef){ordersListenerRef.off();ordersListenerRef=null}
+    if(myOrdersRef){myOrdersRef.off();myOrdersRef=null}
+    document.getElementById("custAuth").classList.remove("hidden");
+    document.getElementById("myOrdersList").innerHTML="<p>Zakazlaringizni ko'rish uchun avval kiring.</p>";
   }
+  show(document.getElementById("shop").classList.contains("hidden")?(document.getElementById("myorders").classList.contains("hidden")?"admin":"myorders"):"shop");
 });
 
 let ordersListenerRef=null;
@@ -205,6 +268,5 @@ function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){db.ref("o
 
 function togglePaymentInfo(){document.getElementById("cardInfo").classList.toggle("hidden",document.getElementById("payment").value!=="Karta")}
 function toggleAddress(){document.getElementById("addressBox").classList.toggle("hidden",document.getElementById("deliveryType").value!=="Yetkazib berish")}
-render();
-</script></body></html>
-  
+switchAuthTab("login");
+rend
