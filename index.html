@@ -14,9 +14,34 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
 .qty{width:50px;text-align:center;margin:0;padding:8px 4px}
 .track-result{margin-top:12px}
 .loading{text-align:center;padding:20px;color:#8b1e16}
+.gate{max-width:420px;margin:60px auto;padding:0 18px}
+.gate .box{text-align:center}
+.gate-waiting{padding:20px 0}
+.dot-spin{display:inline-block;width:34px;height:34px;border:4px solid #f0e0d1;border-top-color:#8b1e16;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tg-btn{display:inline-block;background:#229ED9;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:bold;margin-top:10px}
+.pending-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:8px 0}
 </style></head><body>
 <header><h1>🥟 Baqachorsu Kishmish Somsa</h1><div>08:00–14:30</div><div>Qo‘qon shahar, Navoiy, Saodat masjid filiali</div></header>
 <main>
+
+<div class="gate" id="loginGate">
+  <div class="box" id="gateForm">
+    <h2>👋 Xush kelibsiz</h2>
+    <p>Ilovadan foydalanish uchun telefon raqamingizni kiriting.</p>
+    <input id="gatePhone" placeholder="+998 90 123 45 67" type="tel">
+    <button class="order" onclick="requestAccess()">Davom etish</button>
+  </div>
+  <div class="box gate-waiting hidden" id="gateWaiting">
+    <div class="dot-spin"></div>
+    <h3>Tasdiqlash kutilmoqda...</h3>
+    <p>Kirishni tasdiqlash uchun Telegramda <b>@abdukarimov_l</b> ga yozing va raqamingizni (<b id="gatePhoneShown"></b>) tasdiqlashini so'rang.</p>
+    <a class="tg-btn" id="gateTgLink" href="#" target="_blank">Telegram'da yozish</a>
+    <p style="font-size:13px;color:#8b6f5c">Admin tasdiqlagach, sahifa avtomatik ochiladi — qayta yuklash shart emas.</p>
+  </div>
+</div>
+
+<div id="appContainer" class="hidden">
 <div class="nav"><button onclick="show('shop')">Zakaz berish</button><button onclick="show('track')">Zakazni tekshirish</button><button onclick="show('admin')">Admin panel</button></div>
 
 <section id="shop"><h2>Somsa tanlang</h2><div class="grid" id="menu"><div class="loading">Yuklanmoqda...</div></div>
@@ -45,7 +70,10 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
 <div id="loginMsg" style="color:#8b1e16;font-weight:bold"></div></div>
 <div id="panel" class="hidden">
 <div class="box" style="display:flex;justify-content:space-between;align-items:center"><span>Kirgan: <b id="whoAmI"></b></span><button class="danger" onclick="logout()" style="width:auto">Chiqish</button></div>
-<div class="box"><h2>🍽 Mahsulotlar mavjudligi</h2><div id="stockPanel"></div></div><div id="stats"></div><div id="orders"></div><button class="danger" onclick="clearOrders()">Barcha zakazlarni o‘chirish</button></div></section>
+<div class="box"><h2>🍽 Mahsulotlar mavjudligi</h2><div id="stockPanel"></div></div>
+<div class="box"><h2>✅ Mijozlarni tasdiqlash</h2><div id="verifications"></div></div>
+<div id="stats"></div><div id="orders"></div><button class="danger" onclick="clearOrders()">Barcha zakazlarni o‘chirish</button></div></section>
+</div>
 </main>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -152,6 +180,48 @@ function trackOrder(){
 
 function show(id){document.getElementById("shop").classList.toggle("hidden",id!=="shop");document.getElementById("track").classList.toggle("hidden",id!=="track");document.getElementById("admin").classList.toggle("hidden",id!=="admin")}
 
+/* ===== MIJOZ KIRISH DARVOZASI ===== */
+let gateListenerRef=null,currentPhoneKey=null;
+
+function requestAccess(){
+  let phoneRaw=document.getElementById("gatePhone").value.trim();
+  if(!phoneRaw)return alert("Telefon raqamingizni kiriting.");
+  let key=phoneRaw.replace(/\D/g,"");
+  if(key.length<9)return alert("Telefon raqamini to‘g‘ri kiriting.");
+  currentPhoneKey=key;
+  let ref=db.ref("verifications/"+key);
+  ref.once("value").then(snap=>{
+    let existing=snap.val();
+    if(!existing){
+      ref.set({phone:phoneRaw,requestedAt:Date.now(),verified:false});
+    }else if(!existing.verified){
+      ref.update({phone:phoneRaw,requestedAt:Date.now()});
+    }
+    document.getElementById("gatePhoneShown").textContent=phoneRaw;
+    document.getElementById("gateTgLink").href="https://t.me/abdukarimov_l?text="+encodeURIComponent("Assalomu alaykum, kirishni tasdiqlashni so'rayman. Raqamim: "+phoneRaw);
+    listenVerification(key);
+  }).catch(()=>alert("Xato yuz berdi. Internetni tekshirib qayta urinib ko'ring."));
+}
+
+function listenVerification(key){
+  document.getElementById("gateForm").classList.add("hidden");
+  document.getElementById("gateWaiting").classList.remove("hidden");
+  if(gateListenerRef)gateListenerRef.off();
+  gateListenerRef=db.ref("verifications/"+key);
+  gateListenerRef.on("value",snap=>{
+    let v=snap.val();
+    if(v&&v.verified){
+      unlockApp();
+    }
+  });
+}
+
+function unlockApp(){
+  document.getElementById("loginGate").classList.add("hidden");
+  document.getElementById("appContainer").classList.remove("hidden");
+}
+/* =================================== */
+
 function login(){
   let email=document.getElementById("adminEmail").value.trim(),pass=document.getElementById("pass").value;
   document.getElementById("loginMsg").textContent="";
@@ -168,14 +238,35 @@ auth.onAuthStateChanged(user=>{
     document.getElementById("panel").classList.remove("hidden");
     document.getElementById("whoAmI").textContent=user.email;
     listenOrders();
+    listenVerifications();
   }else{
     document.getElementById("loginBox").classList.remove("hidden");
     document.getElementById("panel").classList.add("hidden");
     if(ordersListenerRef){ordersListenerRef.off();ordersListenerRef=null}
+    if(verificationsListenerRef){verificationsListenerRef.off();verificationsListenerRef=null}
   }
 });
 
 let ordersListenerRef=null;
+let verificationsListenerRef=null;
+let verificationsState=[];
+function listenVerifications(){
+  if(verificationsListenerRef)return;
+  verificationsListenerRef=db.ref("verifications");
+  verificationsListenerRef.on("value",snap=>{
+    let val=snap.val()||{};
+    verificationsState=Object.keys(val).map(k=>({key:k,...val[k]})).sort((a,b)=>(b.requestedAt||0)-(a.requestedAt||0));
+    renderVerifications();
+  });
+}
+function approveVerification(key){db.ref("verifications/"+key+"/verified").set(true);db.ref("verifications/"+key+"/verifiedAt").set(Date.now())}
+function revokeVerification(key){db.ref("verifications/"+key+"/verified").set(false)}
+function renderVerifications(){
+  let box=document.getElementById("verifications");
+  if(!box)return;
+  if(!verificationsState.length){box.innerHTML="<p>Hozircha so‘rov yo‘q.</p>";return}
+  box.innerHTML=verificationsState.map(v=>`<div class="pending-row"><span>📞 ${v.phone}${v.verified?" ✅":""}</span>${v.verified?`<button class="danger" style="width:auto" onclick="revokeVerification('${v.key}')">Bekor qilish</button>`:`<button style="width:auto;background:#dff2df" onclick="approveVerification('${v.key}')">Tasdiqlash</button>`}</div>`).join("");
+}
 function listenOrders(){
   if(ordersListenerRef)return;
   ordersListenerRef=db.ref("orders");
@@ -198,13 +289,4 @@ function renderAdmin(){
 </div>`).join("");
   let sum=ordersState.reduce((x,o)=>x+o.total,0);
   document.getElementById("stats").innerHTML=`<div class="box"><b>Zakazlar:</b> ${ordersState.length} &nbsp; <b>Tushum:</b> ${money(sum)}</div>`;
-  document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🚗 ${o.deliveryType||"—"}${o.deliveryType==="Yetkazib berish"?`<br>📍 ${o.address||"—"}`:""}<br>💳 ${o.payment}<br>⏰ Kerakli sana/vaqt: <b>${o.wantDate||"—"} ${o.wantTime||""}</b><hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Yetkazilmoqda"?"selected":""}>Yetkazilmoqda</option><option ${o.status=="Yetkazildi"?"selected":""}>Yetkazildi</option></select></div></div>`).join("")||"<p>Hozircha zakaz yo‘q.</p>";
-}
-function setStatus(id,v){db.ref("orders/"+id+"/status").set(v)}
-function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){db.ref("orders").remove()}}
-
-function togglePaymentInfo(){document.getElementById("cardInfo").classList.toggle("hidden",document.getElementById("payment").value!=="Karta")}
-function toggleAddress(){document.getElementById("addressBox").classList.toggle("hidden",document.getElementById("deliveryType").value!=="Yetkazib berish")}
-render();
-</script></body></html>
-  
+  document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🚗 ${o.deliveryType||"—"}${o.deliveryType==="Yetkazib berish"?`<br>📍 ${o.address||"—"}`:""}<br>💳 ${o.payment}<br>⏰ Kerakli sana/vaqt: <b>${o.wantDate||"—"} ${o.wantTime||""}</b><hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Yetkazilmoqda"?"selected":""}>Yetkazilmoqda</option><option ${o.status=="Yetkazildi"?"selected":""}>Ye
