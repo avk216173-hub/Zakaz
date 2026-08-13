@@ -336,4 +336,53 @@ function listenVerifications(){
     renderVerifications();
   });
 }
-function approveVerification(key){db.ref("verifications/"+key+"/verified").set(true);db.ref("verifications/"+key+"/v
+function approveVerification(key){db.ref("verifications/"+key+"/verified").set(true);db.ref("verifications/"+key+"/verifiedAt").set(Date.now())}
+function revokeVerification(key){db.ref("verifications/"+key+"/verified").set(false)}
+function renderVerifications(){
+  let box=document.getElementById("verifications");
+  if(!box)return;
+  if(!verificationsState.length){box.innerHTML="<p>Hozircha so‘rov yo‘q.</p>";return}
+  box.innerHTML=verificationsState.map(v=>`<div class="pending-row"><span>📞 ${v.phone}${v.verified?" ✅":""}</span>${v.verified?`<button class="danger" style="width:auto" onclick="revokeVerification('${v.key}')">Bekor qilish</button>`:`<button style="width:auto;background:#dff2df" onclick="approveVerification('${v.key}')">Tasdiqlash</button>`}</div>`).join("");
+}
+function listenOrders(){
+  if(ordersListenerRef)return;
+  ordersListenerRef=db.ref("orders");
+  ordersListenerRef.on("value",snap=>{
+    let val=snap.val()||{};
+    ordersState=Object.keys(val).map(k=>({id:k,...val[k]})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    renderAdmin();
+  });
+}
+
+function renderAdmin(){
+  let stock=getStock(),prices=getPrices(),images=getImages();
+  document.getElementById("stockPanel").innerHTML=products.map((p,i)=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:1px solid #eee;padding-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:center"><span><b>${p[0]}</b></span><span style="display:flex;gap:6px;align-items:center"><input class="qty" style="width:80px" type="number" min="0" value="${prices[i]}" onchange="setPrice(${i},this.value)"><button style="background:${stock[i]?'#dff2df':'#f4c7c7'}" onclick="toggleStock(${i})">${stock[i]?'✅ Bor':'❌ Yo‘q'}</button></span></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    ${images[i]?`<img src="${images[i]}" style="width:60px;height:60px;object-fit:cover;border-radius:8px">`:`<div style="width:60px;height:60px;background:#f0e0d1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888">rasm yo'q</div>`}
+    <input type="file" accept="image/*" onchange="setImage(${i},this.files[0])" style="margin:0;padding:6px">
+    ${images[i]?`<button class="danger" onclick="removeImage(${i})">🗑 O'chirish</button>`:""}
+  </div>
+</div>`).join("");
+  let sum=ordersState.reduce((x,o)=>x+o.total,0);
+  document.getElementById("stats").innerHTML=`<div class="box"><b>Zakazlar:</b> ${ordersState.length} &nbsp; <b>Tushum:</b> ${money(sum)}</div>`;
+  document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🚗 ${o.deliveryType||"—"}${o.deliveryType==="Yetkazib berish"?`<br>📍 ${o.address||"—"}`:""}<br>💳 ${o.payment}<br>⏰ Kerakli sana/vaqt: <b>${o.wantDate||"—"} ${o.wantTime||""}</b><hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Yetkazilmoqda"?"selected":""}>Yetkazilmoqda</option><option ${o.status=="Yetkazildi"?"selected":""}>Yetkazildi</option></select></div></div>`).join("")||"<p>Hozircha zakaz yo‘q.</p>";
+}
+function setStatus(id,v){db.ref("orders/"+id+"/status").set(v)}
+function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){db.ref("orders").remove()}}
+
+function togglePaymentInfo(){document.getElementById("cardInfo").classList.toggle("hidden",document.getElementById("payment").value!=="Karta")}
+function toggleAddress(){document.getElementById("addressBox").classList.toggle("hidden",document.getElementById("deliveryType").value!=="Yetkazib berish")}
+render();
+
+// Buyurtma sanasi: bugundan oldingi kun tanlanmasin
+document.getElementById("wantDate").min=new Date().toISOString().split("T")[0];
+
+// Firebase ulanishini tekshirish — muammo bo'lsa mijozga ko'rsatiladi
+setTimeout(()=>{
+  db.ref(".info/connected").once("value").catch(err=>{
+    console.error("Firebase ulanish xatosi:",err);
+    document.getElementById("gateForm").innerHTML="<h2>⚠️ Ulanishda muammo</h2><p>Internetni tekshiring yoki keyinroq qayta urinib ko'ring.</p>";
+  });
+},4000);
+</script></body></html>
