@@ -30,14 +30,14 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
     <h2>👋 Xush kelibsiz</h2>
     <p>Ilovadan foydalanish uchun telefon raqamingizni kiriting.</p>
     <input id="gatePhone" placeholder="+998 90 123 45 67" type="tel">
-    <button class="order" onclick="requestAccess()">Davom etish</button>
+    <button class="order" onclick="requestAccess()">Telegram orqali kod olish</button>
   </div>
-  <div class="box gate-waiting hidden" id="gateWaiting">
-    <div class="dot-spin"></div>
-    <h3>Tasdiqlash kutilmoqda...</h3>
-    <p>Kirishni tasdiqlash uchun Telegramda <b>@abdukarimov_l</b> ga yozing va raqamingizni (<b id="gatePhoneShown"></b>) tasdiqlashini so'rang.</p>
-    <a class="tg-btn" id="gateTgLink" href="#" target="_blank">Telegram'da yozish</a>
-    <p style="font-size:13px;color:#8b6f5c">Admin tasdiqlagach, sahifa avtomatik ochiladi — qayta yuklash shart emas.</p>
+  <div class="box hidden" id="gateCodeBox">
+    <h3>📲 Kod yuborildi</h3>
+    <p>Telegram bot (<b>@kishmishsomsa_bot</b>) ochiladi va sizga kod yuboradi. Kodni oling va shu yerga kiriting:</p>
+    <a class="tg-btn" id="gateTgLink" href="#" target="_blank">Botni qayta ochish</a>
+    <input id="gateCode" placeholder="6 xonali kod" type="tel" maxlength="6" style="margin-top:14px">
+    <button class="order" onclick="confirmCode()">Tasdiqlash</button>
   </div>
 </div>
 
@@ -193,8 +193,11 @@ function trackOrder(){
 
 function show(id){document.getElementById("shop").classList.toggle("hidden",id!=="shop");document.getElementById("track").classList.toggle("hidden",id!=="track");document.getElementById("admin").classList.toggle("hidden",id!=="admin")}
 
-/* ===== MIJOZ KIRISH DARVOZASI ===== */
+/* ===== MIJOZ KIRISH DARVOZASI (Telegram bot orqali kod) ===== */
 let gateListenerRef=null,currentPhoneKey=null;
+const GATE_BOT="tasdiqlasomsa_bot";
+
+function genCode(){return String(Math.floor(100000+Math.random()*900000))}
 
 function requestAccess(){
  try{
@@ -206,32 +209,30 @@ function requestAccess(){
   currentPhoneKey=key;
   let btn=document.querySelector('#gateForm button');
   btn.disabled=true;btn.textContent="Yuborilmoqda...";
+  let code=genCode();
   let ref=db.ref("verifications/"+key);
   let timedOut=false;
   let timeoutId=setTimeout(()=>{
     timedOut=true;
-    btn.disabled=false;btn.textContent="Davom etish";
-    alert("Ulanish juda uzoq davom etyapti. Firebase Database URL manzili noto'g'ri bo'lishi mumkin — Firebase Console'dan aniq URL'ni tekshiring.");
+    btn.disabled=false;btn.textContent="Telegram orqali kod olish";
+    alert("Ulanish juda uzoq davom etyapti. Internetni tekshirib qayta urinib ko'ring.");
   },8000);
-  ref.once("value").then(snap=>{
-    let existing=snap.val();
-    if(!existing){
-      return ref.set({phone:phoneRaw,requestedAt:Date.now(),verified:false});
-    }else if(!existing.verified){
-      return ref.update({phone:phoneRaw,requestedAt:Date.now()});
-    }
-  }).then(()=>{
+  ref.set({phone:phoneRaw,code,verified:false,requestedAt:Date.now()}).then(()=>{
     if(timedOut)return;
     clearTimeout(timeoutId);
-    document.getElementById("gatePhoneShown").textContent=phoneRaw;
-    document.getElementById("gateTgLink").href="https://t.me/abdukarimov_l?text="+encodeURIComponent("Assalomu alaykum, kirishni tasdiqlashni so'rayman. Raqamim: "+phoneRaw);
+    btn.disabled=false;btn.textContent="Telegram orqali kod olish";
+    document.getElementById("gateForm").classList.add("hidden");
+    document.getElementById("gateCodeBox").classList.remove("hidden");
+    let tgUrl="https://t.me/"+GATE_BOT+"?start="+key;
+    document.getElementById("gateTgLink").href=tgUrl;
+    window.open(tgUrl,"_blank");
     listenVerification(key);
   }).catch(err=>{
     if(timedOut)return;
     clearTimeout(timeoutId);
     console.error("requestAccess xatosi:",err);
-    btn.disabled=false;btn.textContent="Davom etish";
-    alert("Ulanishda xato: "+(err&&err.message?err.message:"noma'lum xato")+"\n\nFirebase Database qoidalarini (Rules) tekshiring.");
+    btn.disabled=false;btn.textContent="Telegram orqali kod olish";
+    alert("Ulanishda xato: "+(err&&err.message?err.message:"noma'lum xato"));
   });
  }catch(e){
   console.error("requestAccess sinxron xatosi:",e);
@@ -239,9 +240,25 @@ function requestAccess(){
  }
 }
 
+function confirmCode(){
+  let code=document.getElementById("gateCode").value.trim();
+  if(!code)return alert("Kodni kiriting.");
+  if(!currentPhoneKey)return alert("Avval telefon raqamini kiriting.");
+  let confirmBtn=document.querySelector('#gateCodeBox button.order');
+  confirmBtn.disabled=true;confirmBtn.textContent="Tekshirilmoqda...";
+  db.ref("verifications/"+currentPhoneKey).once("value").then(snap=>{
+    let v=snap.val();
+    confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";
+    if(!v){alert("So'rov topilmadi. Qaytadan urinib ko'ring.");return}
+    if(String(v.code)!==code){alert("Kod noto‘g‘ri. Qaytadan kiriting.");return}
+    return db.ref("verifications/"+currentPhoneKey).update({verified:true});
+  }).catch(err=>{
+    confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";
+    alert("Xato: "+err.message);
+  });
+}
+
 function listenVerification(key){
-  document.getElementById("gateForm").classList.add("hidden");
-  document.getElementById("gateWaiting").classList.remove("hidden");
   if(gateListenerRef)gateListenerRef.off();
   gateListenerRef=db.ref("verifications/"+key);
   gateListenerRef.on("value",snap=>{
@@ -314,7 +331,4 @@ function listenOrders(){
 }
 
 function renderAdmin(){
-  let stock=getStock(),prices=getPrices(),images=getImages();
-  document.getElementById("stockPanel").innerHTML=products.map((p,i)=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:1px solid #eee;padding-bottom:10px">
-  <div style="display:flex;justify-content:space-between;align-items:center"><span><b>${p[0]}</b></span><span style="display:flex;gap:6px;align-items:center"><input class="qty" style="width:80px" type="number" min="0" value="${prices[i]}" onchange="setPrice(${i},this.value)"><button style="background:${stock[i]?'#dff2df':'#f4c7c7'}" onclick="toggleStock(${i})">${stock[i]?'✅ Bor':'❌ Yo‘q'}</button></span></div>
-  <div style="display:flex;g
+  let stock=getStock
