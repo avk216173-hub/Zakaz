@@ -35,7 +35,8 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
   <div class="box hidden" id="gateCodeBox">
     <h3>📲 Kod yuborildi</h3>
     <p>Telegram bot (<b>@kishmishsomsa_bot</b>) ochiladi va sizga kod yuboradi. Kodni oling va shu yerga kiriting:</p>
-    <a class="tg-btn" id="gateTgLink" href="#" target="_blank">Botni qayta ochish</a>
+    <p style="font-weight:bold;color:#8b1e16">👇 Pastdagi tugmani albatta o'zingiz bosing (avtomatik ochilmaydi):</p>
+    <a class="tg-btn" id="gateTgLink" href="#" target="_blank">📲 Botni ochish (bosing)</a>
     <input id="gateCode" placeholder="6 xonali kod" type="tel" maxlength="6" style="margin-top:14px">
     <button class="order" onclick="confirmCode()">Tasdiqlash</button>
   </div>
@@ -193,15 +194,30 @@ function trackOrder(){
 
 function show(id){document.getElementById("shop").classList.toggle("hidden",id!=="shop");document.getElementById("track").classList.toggle("hidden",id!=="track");document.getElementById("admin").classList.toggle("hidden",id!=="admin")}
 
-/* ===== MIJOZ KIRISH DARVOZASI (Telegram bot orqali kod) ===== */
-let gateListenerRef=null,currentPhoneKey=null;
+/* ===== MIJOZ KIRISH DARVOZASI (Telegram bot orqali kod — oddiy HTTPS so'rovlar orqali, WebSocket'siz) ===== */
+let gatePollId=null,currentPhoneKey=null;
 const GATE_BOT="tasdiqlasomsa_bot";
+const REST_DB="https://kishmish-somsa-default-rtdb.firebaseio.com";
 
 function genCode(){return String(Math.floor(100000+Math.random()*900000))}
 
+async function restGet(path){
+  let res=await fetch(`${REST_DB}/${path}.json`);
+  if(!res.ok)throw new Error("DB xato: "+res.status);
+  return res.json();
+}
+async function restPut(path,value){
+  let res=await fetch(`${REST_DB}/${path}.json`,{method:"PUT",body:JSON.stringify(value)});
+  if(!res.ok)throw new Error("DB xato: "+res.status);
+  return res.json();
+}
+async function restPatch(path,value){
+  let res=await fetch(`${REST_DB}/${path}.json`,{method:"PATCH",body:JSON.stringify(value)});
+  if(!res.ok)throw new Error("DB xato: "+res.status);
+  return res.json();
+}
+
 function requestAccess(){
- try{
-  if(!firebaseReady){alert("Ulanishda muammo bor. Internetni tekshirib, sahifani qayta yuklang.");return}
   let phoneRaw=document.getElementById("gatePhone").value.trim();
   if(!phoneRaw)return alert("Telefon raqamingizni kiriting.");
   let key=phoneRaw.replace(/\D/g,"");
@@ -210,14 +226,13 @@ function requestAccess(){
   let btn=document.querySelector('#gateForm button');
   btn.disabled=true;btn.textContent="Yuborilmoqda...";
   let code=genCode();
-  let ref=db.ref("verifications/"+key);
   let timedOut=false;
   let timeoutId=setTimeout(()=>{
     timedOut=true;
     btn.disabled=false;btn.textContent="Telegram orqali kod olish";
     alert("Ulanish juda uzoq davom etyapti. Internetni tekshirib qayta urinib ko'ring.");
-  },8000);
-  ref.set({phone:phoneRaw,code,verified:false,requestedAt:Date.now()}).then(()=>{
+  },10000);
+  restPut("verifications/"+key,{phone:phoneRaw,code,verified:false,requestedAt:Date.now()}).then(()=>{
     if(timedOut)return;
     clearTimeout(timeoutId);
     btn.disabled=false;btn.textContent="Telegram orqali kod olish";
@@ -225,8 +240,8 @@ function requestAccess(){
     document.getElementById("gateCodeBox").classList.remove("hidden");
     let tgUrl="https://t.me/"+GATE_BOT+"?start="+key;
     document.getElementById("gateTgLink").href=tgUrl;
-    window.open(tgUrl,"_blank");
-    listenVerification(key);
+    document.getElementById("gateTgLink").textContent="📲 Botni ochish (bosing)";
+    startVerificationPolling(key);
   }).catch(err=>{
     if(timedOut)return;
     clearTimeout(timeoutId);
@@ -234,10 +249,6 @@ function requestAccess(){
     btn.disabled=false;btn.textContent="Telegram orqali kod olish";
     alert("Ulanishda xato: "+(err&&err.message?err.message:"noma'lum xato"));
   });
- }catch(e){
-  console.error("requestAccess sinxron xatosi:",e);
-  alert("Xatolik: "+e.message);
- }
 }
 
 function confirmCode(){
@@ -246,27 +257,29 @@ function confirmCode(){
   if(!currentPhoneKey)return alert("Avval telefon raqamini kiriting.");
   let confirmBtn=document.querySelector('#gateCodeBox button.order');
   confirmBtn.disabled=true;confirmBtn.textContent="Tekshirilmoqda...";
-  db.ref("verifications/"+currentPhoneKey).once("value").then(snap=>{
-    let v=snap.val();
-    confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";
-    if(!v){alert("So'rov topilmadi. Qaytadan urinib ko'ring.");return}
-    if(String(v.code)!==code){alert("Kod noto‘g‘ri. Qaytadan kiriting.");return}
-    return db.ref("verifications/"+currentPhoneKey).update({verified:true});
+  restGet("verifications/"+currentPhoneKey).then(v=>{
+    if(!v){confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";alert("So'rov topilmadi. Qaytadan urinib ko'ring.");return}
+    if(String(v.code)!==code){confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";alert("Kod noto‘g‘ri. Qaytadan kiriting.");return}
+    return restPatch("verifications/"+currentPhoneKey,{verified:true}).then(()=>{
+      confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";
+      unlockApp();
+    });
   }).catch(err=>{
     confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";
     alert("Xato: "+err.message);
   });
 }
 
-function listenVerification(key){
-  if(gateListenerRef)gateListenerRef.off();
-  gateListenerRef=db.ref("verifications/"+key);
-  gateListenerRef.on("value",snap=>{
-    let v=snap.val();
-    if(v&&v.verified){
-      unlockApp();
-    }
-  });
+function startVerificationPolling(key){
+  if(gatePollId)clearInterval(gatePollId);
+  gatePollId=setInterval(()=>{
+    restGet("verifications/"+key).then(v=>{
+      if(v&&v.verified){
+        clearInterval(gatePollId);
+        unlockApp();
+      }
+    }).catch(()=>{});
+  },3000);
 }
 
 function unlockApp(){
@@ -316,19 +329,4 @@ function approveVerification(key){db.ref("verifications/"+key+"/verified").set(t
 function revokeVerification(key){db.ref("verifications/"+key+"/verified").set(false)}
 function renderVerifications(){
   let box=document.getElementById("verifications");
-  if(!box)return;
-  if(!verificationsState.length){box.innerHTML="<p>Hozircha so‘rov yo‘q.</p>";return}
-  box.innerHTML=verificationsState.map(v=>`<div class="pending-row"><span>📞 ${v.phone}${v.verified?" ✅":""}</span>${v.verified?`<button class="danger" style="width:auto" onclick="revokeVerification('${v.key}')">Bekor qilish</button>`:`<button style="width:auto;background:#dff2df" onclick="approveVerification('${v.key}')">Tasdiqlash</button>`}</div>`).join("");
-}
-function listenOrders(){
-  if(ordersListenerRef)return;
-  ordersListenerRef=db.ref("orders");
-  ordersListenerRef.on("value",snap=>{
-    let val=snap.val()||{};
-    ordersState=Object.keys(val).map(k=>({id:k,...val[k]})).sort((a,b)=>(b.ts||0)-(a.ts||0));
-    renderAdmin();
-  });
-}
-
-function renderAdmin(){
-  let stock=getStock
+  if(
