@@ -207,6 +207,12 @@ function requestAccess(){
   let btn=document.querySelector('#gateForm button');
   btn.disabled=true;btn.textContent="Yuborilmoqda...";
   let ref=db.ref("verifications/"+key);
+  let timedOut=false;
+  let timeoutId=setTimeout(()=>{
+    timedOut=true;
+    btn.disabled=false;btn.textContent="Davom etish";
+    alert("Ulanish juda uzoq davom etyapti. Firebase Database URL manzili noto'g'ri bo'lishi mumkin — Firebase Console'dan aniq URL'ni tekshiring.");
+  },8000);
   ref.once("value").then(snap=>{
     let existing=snap.val();
     if(!existing){
@@ -215,10 +221,14 @@ function requestAccess(){
       return ref.update({phone:phoneRaw,requestedAt:Date.now()});
     }
   }).then(()=>{
+    if(timedOut)return;
+    clearTimeout(timeoutId);
     document.getElementById("gatePhoneShown").textContent=phoneRaw;
     document.getElementById("gateTgLink").href="https://t.me/abdukarimov_l?text="+encodeURIComponent("Assalomu alaykum, kirishni tasdiqlashni so'rayman. Raqamim: "+phoneRaw);
     listenVerification(key);
   }).catch(err=>{
+    if(timedOut)return;
+    clearTimeout(timeoutId);
     console.error("requestAccess xatosi:",err);
     btn.disabled=false;btn.textContent="Davom etish";
     alert("Ulanishda xato: "+(err&&err.message?err.message:"noma'lum xato")+"\n\nFirebase Database qoidalarini (Rules) tekshiring.");
@@ -307,6 +317,4 @@ function renderAdmin(){
   let stock=getStock(),prices=getPrices(),images=getImages();
   document.getElementById("stockPanel").innerHTML=products.map((p,i)=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:1px solid #eee;padding-bottom:10px">
   <div style="display:flex;justify-content:space-between;align-items:center"><span><b>${p[0]}</b></span><span style="display:flex;gap:6px;align-items:center"><input class="qty" style="width:80px" type="number" min="0" value="${prices[i]}" onchange="setPrice(${i},this.value)"><button style="background:${stock[i]?'#dff2df':'#f4c7c7'}" onclick="toggleStock(${i})">${stock[i]?'✅ Bor':'❌ Yo‘q'}</button></span></div>
-  <div style="display:flex;gap:8px;align-items:center">
-    ${images[i]?`<img src="${images[i]}" style="width:60px;height:60px;object-fit:cover;border-radius:8px">`:`<div style="width:60px;height:60px;background:#f0e0d1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888">rasm yo'q</div>`}
-    <input type="file" accept="image/*" onchange="setImage(${i},this.files[0])" style
+  <div style="display:flex;g
