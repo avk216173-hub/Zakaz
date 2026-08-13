@@ -123,9 +123,11 @@ let imagesState=products.map(()=>null);
 let ordersState=[]; // faqat admin login qilgach to'ladi
 
 // --- Real-vaqtda tinglovchilar: hamma o'qiy oladi (mavjudlik, narx, rasm) ---
-db.ref("stock").on("value",snap=>{let v=snap.val();stockState=v&&v.length===products.length?v:products.map(()=>true);render()});
-db.ref("prices").on("value",snap=>{let v=snap.val();pricesState=v&&v.length===products.length?v:products.map(x=>x[1]);render()});
-db.ref("images").on("value",snap=>{let v=snap.val();imagesState=v&&v.length===products.length?v:products.map(()=>null);render()});
+if(firebaseReady){
+  db.ref("stock").on("value",snap=>{let v=snap.val();stockState=v&&v.length===products.length?v:products.map(()=>true);render()});
+  db.ref("prices").on("value",snap=>{let v=snap.val();pricesState=v&&v.length===products.length?v:products.map(x=>x[1]);render()});
+  db.ref("images").on("value",snap=>{let v=snap.val();imagesState=v&&v.length===products.length?v:products.map(()=>null);render()});
+}
 
 function getStock(){return stockState}
 function getPrices(){return pricesState}
@@ -217,7 +219,13 @@ async function restPatch(path,value){
   return res.json();
 }
 
+window.onerror=function(msg,src,line,col,err){
+  alert("Sahifada xato: "+msg+" (qator "+line+")");
+  return false;
+};
+
 function requestAccess(){
+ try{
   let phoneRaw=document.getElementById("gatePhone").value.trim();
   if(!phoneRaw)return alert("Telefon raqamingizni kiriting.");
   let key=phoneRaw.replace(/\D/g,"");
@@ -249,6 +257,9 @@ function requestAccess(){
     btn.disabled=false;btn.textContent="Telegram orqali kod olish";
     alert("Ulanishda xato: "+(err&&err.message?err.message:"noma'lum xato"));
   });
+ }catch(e){
+  alert("Sinxron xato: "+e.message);
+ }
 }
 
 function confirmCode(){
@@ -325,8 +336,4 @@ function listenVerifications(){
     renderVerifications();
   });
 }
-function approveVerification(key){db.ref("verifications/"+key+"/verified").set(true);db.ref("verifications/"+key+"/verifiedAt").set(Date.now())}
-function revokeVerification(key){db.ref("verifications/"+key+"/verified").set(false)}
-function renderVerifications(){
-  let box=document.getElementById("verifications");
-  if(
+function approveVerification(key){db.ref("verifications/"+key+"/verified").set(true);db.ref("verifications/"+key+"/v
