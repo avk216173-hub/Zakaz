@@ -89,9 +89,22 @@ const firebaseConfig = {
   messagingSenderId: "1007286693232",
   appId: "1:1007286693232:web:2049262c837f32b91933b5"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+let auth, db, firebaseReady = false;
+try{
+  if(typeof firebase === "undefined"){
+    throw new Error("Firebase kutubxonasi yuklanmadi (internet yoki tarmoq bloklovi bo'lishi mumkin).");
+  }
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.database();
+  firebaseReady = true;
+}catch(e){
+  console.error("Firebase ishga tushmadi:",e);
+  window.addEventListener("DOMContentLoaded",()=>{
+    let gf=document.getElementById("gateForm");
+    if(gf)gf.innerHTML="<h2>⚠️ Ulanishda muammo</h2><p>"+e.message+"</p><p style='font-size:13px;color:#8b6f5c'>Internetni tekshirib, sahifani qayta yuklang.</p>";
+  });
+}
 /* ================================= */
 
 /* ===== TELEGRAM SOZLAMALARI ===== */
@@ -184,23 +197,36 @@ function show(id){document.getElementById("shop").classList.toggle("hidden",id!=
 let gateListenerRef=null,currentPhoneKey=null;
 
 function requestAccess(){
+ try{
+  if(!firebaseReady){alert("Ulanishda muammo bor. Internetni tekshirib, sahifani qayta yuklang.");return}
   let phoneRaw=document.getElementById("gatePhone").value.trim();
   if(!phoneRaw)return alert("Telefon raqamingizni kiriting.");
   let key=phoneRaw.replace(/\D/g,"");
   if(key.length<9)return alert("Telefon raqamini to‘g‘ri kiriting.");
   currentPhoneKey=key;
+  let btn=document.querySelector('#gateForm button');
+  btn.disabled=true;btn.textContent="Yuborilmoqda...";
   let ref=db.ref("verifications/"+key);
   ref.once("value").then(snap=>{
     let existing=snap.val();
     if(!existing){
-      ref.set({phone:phoneRaw,requestedAt:Date.now(),verified:false});
+      return ref.set({phone:phoneRaw,requestedAt:Date.now(),verified:false});
     }else if(!existing.verified){
-      ref.update({phone:phoneRaw,requestedAt:Date.now()});
+      return ref.update({phone:phoneRaw,requestedAt:Date.now()});
     }
+  }).then(()=>{
     document.getElementById("gatePhoneShown").textContent=phoneRaw;
     document.getElementById("gateTgLink").href="https://t.me/abdukarimov_l?text="+encodeURIComponent("Assalomu alaykum, kirishni tasdiqlashni so'rayman. Raqamim: "+phoneRaw);
     listenVerification(key);
-  }).catch(()=>alert("Xato yuz berdi. Internetni tekshirib qayta urinib ko'ring."));
+  }).catch(err=>{
+    console.error("requestAccess xatosi:",err);
+    btn.disabled=false;btn.textContent="Davom etish";
+    alert("Ulanishda xato: "+(err&&err.message?err.message:"noma'lum xato")+"\n\nFirebase Database qoidalarini (Rules) tekshiring.");
+  });
+ }catch(e){
+  console.error("requestAccess sinxron xatosi:",e);
+  alert("Xatolik: "+e.message);
+ }
 }
 
 function listenVerification(key){
@@ -232,7 +258,7 @@ function login(){
 }
 function logout(){auth.signOut()}
 
-auth.onAuthStateChanged(user=>{
+if(firebaseReady)auth.onAuthStateChanged(user=>{
   if(user){
     document.getElementById("loginBox").classList.add("hidden");
     document.getElementById("panel").classList.remove("hidden");
@@ -283,10 +309,4 @@ function renderAdmin(){
   <div style="display:flex;justify-content:space-between;align-items:center"><span><b>${p[0]}</b></span><span style="display:flex;gap:6px;align-items:center"><input class="qty" style="width:80px" type="number" min="0" value="${prices[i]}" onchange="setPrice(${i},this.value)"><button style="background:${stock[i]?'#dff2df':'#f4c7c7'}" onclick="toggleStock(${i})">${stock[i]?'✅ Bor':'❌ Yo‘q'}</button></span></div>
   <div style="display:flex;gap:8px;align-items:center">
     ${images[i]?`<img src="${images[i]}" style="width:60px;height:60px;object-fit:cover;border-radius:8px">`:`<div style="width:60px;height:60px;background:#f0e0d1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888">rasm yo'q</div>`}
-    <input type="file" accept="image/*" onchange="setImage(${i},this.files[0])" style="margin:0;padding:6px">
-    ${images[i]?`<button class="danger" onclick="removeImage(${i})">🗑 O'chirish</button>`:""}
-  </div>
-</div>`).join("");
-  let sum=ordersState.reduce((x,o)=>x+o.total,0);
-  document.getElementById("stats").innerHTML=`<div class="box"><b>Zakazlar:</b> ${ordersState.length} &nbsp; <b>Tushum:</b> ${money(sum)}</div>`;
-  document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🚗 ${o.deliveryType||"—"}${o.deliveryType==="Yetkazib berish"?`<br>📍 ${o.address||"—"}`:""}<br>💳 ${o.payment}<br>⏰ Kerakli sana/vaqt: <b>${o.wantDate||"—"} ${o.wantTime||""}</b><hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Yetkazilmoqda"?"selected":""}>Yetkazilmoqda</option><option ${o.status=="Yetkazildi"?"selected":""}>Ye
+    <input type="file" accept="image/*" onchange="setImage(${i},this.files[0])" style
