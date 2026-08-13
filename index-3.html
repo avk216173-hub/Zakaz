@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kishmish Somsa</title>
+<style>
+body{margin:0;font-family:Arial;background:#fff8ef;color:#2d2118}header{background:#8b1e16;color:#fff;padding:20px;text-align:center}
+main{max-width:900px;margin:auto;padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.card,.box{background:#fff;padding:16px;border-radius:15px;box-shadow:0 3px 12px #0001;margin-bottom:15px}
+.price{color:#8b1e16;font-weight:bold;font-size:18px}.controls{display:flex;gap:10px;align-items:center;margin-top:12px}
+button{border:0;border-radius:9px;padding:10px 14px;font-weight:bold;cursor:pointer}.plus,.minus{background:#f0e0d1}.order{background:#8b1e16;color:#fff;width:100%;font-size:17px}
+input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid #d8c7b7;border-radius:9px;box-sizing:border-box}
+.row{display:flex;justify-content:space-between;padding:7px 0}.total{font-size:21px;font-weight:bold;border-top:1px solid #ddd;margin-top:8px}
+.nav{display:flex;gap:8px;margin-bottom:15px}.nav button{flex:1}.hidden{display:none}.orderbox{border-left:5px solid #8b1e16;padding:12px;margin:12px 0;background:#fff}
+.status{font-weight:bold}.danger{background:#f4c7c7}.success{background:#dff2df;padding:12px;border-radius:9px;display:none}
+.qty{width:50px;text-align:center;margin:0;padding:8px 4px}
+.track-result{margin-top:12px}
+.loading{text-align:center;padding:20px;color:#8b1e16}
+.gate{max-width:420px;margin:60px auto;padding:0 18px}
+.gate .box{text-align:center}
+.gate-waiting{padding:20px 0}
+.dot-spin{display:inline-block;width:34px;height:34px;border:4px solid #f0e0d1;border-top-color:#8b1e16;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tg-btn{display:inline-block;background:#229ED9;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:bold;margin-top:10px}
+.pending-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:8px 0}
+</style></head><body>
+<header><h1>🥟 Baqachorsu Kishmish Somsa</h1><div>08:00–14:30</div><div>Qo‘qon shahar, Navoiy, Saodat masjid filiali</div></header>
+<main>
+
+<div class="gate" id="loginGate">
+  <div class="box" id="gateForm">
+    <h2>👋 Xush kelibsiz</h2>
+    <p>Ilovadan foydalanish uchun telefon raqamingizni kiriting.</p>
+    <input id="gatePhone" placeholder="+998 90 123 45 67" type="tel">
+    <button class="order" onclick="requestAccess()">Telegram orqali kod olish</button>
+  </div>
+  <div class="box hidden" id="gateCodeBox">
+    <h3>📲 Kod yuborildi</h3>
+    <p>Telegram bot (<b>@kishmishsomsa_bot</b>) ochiladi va sizga kod yuboradi. Kodni oling va shu yerga kiriting:</p>
+    <p style="font-weight:bold;color:#8b1e16">👇 Pastdagi tugmani albatta o'zingiz bosing (avtomatik ochilmaydi):</p>
+    <a class="tg-btn" id="gateTgLink" href="#" target="_blank">📲 Botni ochish (bosing)</a>
+    <input id="gateCode" placeholder="6 xonali kod" type="tel" maxlength="6" style="margin-top:14px">
+    <button class="order" onclick="confirmCode()">Tasdiqlash</button>
+  </div>
+</div>
+
+<div id="appContainer" class="hidden">
+<div class="nav"><button onclick="show('shop')">Zakaz berish</button><button onclick="show('track')">Zakazni tekshirish</button><button onclick="show('admin')">Admin panel</button></div>
+
+<section id="shop"><h2>Somsa tanlang</h2><div class="grid" id="menu"><div class="loading">Yuklanmoqda...</div></div>
+<div class="box"><h2>Ma’lumotlar</h2><input id="name" placeholder="Ism"><input id="phone" placeholder="Telefon">
+<select id="deliveryType" onchange="toggleAddress()"><option value="Yetkazib berish">🚗 Yetkazib berish</option><option value="Olib ketish">🏠 O'zim olib ketaman</option></select>
+<div id="addressBox"><textarea id="address" placeholder="Manzil"></textarea></div>
+<label style="font-weight:bold">Yetkazib berish/olib ketish sanasi va vaqti *</label>
+<input id="wantDate" type="date">
+<input id="wantTime" type="time">
+<select id="payment" onchange="togglePaymentInfo()"><option>Naqd</option><option>Karta</option></select>
+<div id="cardInfo" class="hidden" style="background:#fff8ef;border:1px dashed #8b1e16;border-radius:9px;padding:12px;margin:-4px 0 12px">
+  💳 <b>Karta raqami:</b> 5614 6818 1543 2855<br>
+  👤 <b>Egasi:</b> Abdukarimov Botirjon<br>
+  <span style="font-size:14px">To'lovni shu kartaga o'tkazing, so'ng chekni (skrinshotni) Telegramda <b>@abdukarimov_l</b> ga yuboring.</span>
+</div>
+<div id="summary"></div>
+<button class="order" onclick="placeOrder()">Zakaz berish</button><div class="success" id="ok"></div></div></section>
+
+<section id="track" class="hidden"><div class="box"><h2>📦 Zakazni tekshirish</h2>
+<p>Zakaz berganingizda chiqqan <b>zakaz raqamini</b> kiriting.</p>
+<input id="trackId" placeholder="Zakaz raqami"><button class="order" onclick="trackOrder()">Tekshirish</button>
+<div class="track-result" id="trackResult"></div></div></section>
+
+<section id="admin" class="hidden"><div class="box" id="loginBox"><h2>🔐 Admin panel</h2>
+<input id="adminEmail" placeholder="Admin email" type="email"><input id="pass" type="password" placeholder="Admin paroli"><button onclick="login()">Kirish</button>
+<div id="loginMsg" style="color:#8b1e16;font-weight:bold"></div></div>
+<div id="panel" class="hidden">
+<div class="box" style="display:flex;justify-content:space-between;align-items:center"><span>Kirgan: <b id="whoAmI"></b></span><button class="danger" onclick="logout()" style="width:auto">Chiqish</button></div>
+<div class="box"><h2>🍽 Mahsulotlar mavjudligi</h2><div id="stockPanel"></div></div>
+<div class="box"><h2>✅ Mijozlarni tasdiqlash</h2><div id="verifications"></div></div>
+<div id="stats"></div><div id="orders"></div><button class="danger" onclick="clearOrders()">Barcha zakazlarni o‘chirish</button></div></section>
+</div>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script>
+/* ===== FIREBASE SOZLAMALARI ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCMnJuITMrVV5ggkk0XQjll633GMt3Awm8",
+  authDomain: "kishmish-somsa.firebaseapp.com",
+  databaseURL: "https://kishmish-somsa-default-rtdb.firebaseio.com",
+  projectId: "kishmish-somsa",
+  storageBucket: "kishmish-somsa.firebasestorage.app",
+  messagingSenderId: "1007286693232",
+  appId: "1:1007286693232:web:2049262c837f32b91933b5"
+};
+let auth, db, firebaseReady = false;
+try{
+  if(typeof firebase === "undefined"){
+    throw new Error("Firebase kutubxonasi yuklanmadi (internet yoki tarmoq bloklovi bo'lishi mumkin).");
+  }
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.database();
+  firebaseReady = true;
+}catch(e){
+  console.error("Firebase ishga tushmadi:",e);
+  window.addEventListener("DOMContentLoaded",()=>{
+    let gf=document.getElementById("gateForm");
+    if(gf)gf.innerHTML="<h2>⚠️ Ulanishda muammo</h2><p>"+e.message+"</p><p style='font-size:13px;color:#8b6f5c'>Internetni tekshirib, sahifani qayta yuklang.</p>";
+  });
+}
+/* ================================= */
+
+/* ===== TELEGRAM SOZLAMALARI ===== */
+const TELEGRAM_BOT_TOKEN = "8889089586:AAHc9MWJFj3Qldw6KrgSo5u-46BhTFk4Az0";
+const TELEGRAM_CHAT_ID   = "6463111231";
+/* ================================= */
+
+const products=[["Mol go‘shtli",12000],["Qo‘y go‘shtli",15000],["Qiymali",6000],["Tovuqli",6000],["Kartoshkali",6000],["Qovoqli",6000],["Olcha kompot (1L)",12000]],cart=products.map(()=>0);
+const money=n=>n.toLocaleString("uz-UZ")+" so‘m";
+
+// Umumiy (bulutdagi) holat — barcha qurilmalarda bir xil
+let stockState=products.map(()=>true);
+let pricesState=products.map(x=>x[1]);
+let imagesState=products.map(()=>null);
+let ordersState=[]; // faqat admin login qilgach to'ladi
+
+// --- Real-vaqtda tinglovchilar: hamma o'qiy oladi (mavjudlik, narx, rasm) ---
+if(firebaseReady){
+  db.ref("stock").on("value",snap=>{let v=snap.val();stockState=v&&v.length===products.length?v:products.map(()=>true);render()});
+  db.ref("prices").on("value",snap=>{let v=snap.val();pricesState=v&&v.length===products.length?v:products.map(x=>x[1]);render()});
+  db.ref("images").on("value",snap=>{let v=snap.val();imagesState=v&&v.length===products.length?v:products.map(()=>null);render()});
+}
+
+function getStock(){return stockState}
+function getPrices(){return pricesState}
+function getImages(){return imagesState}
+
+function toggleStock(i){let s=stockState.slice();s[i]=!s[i];db.ref("stock").set(s)}
+function setPrice(i,v){let n=parseInt(v);if(isNaN(n)||n<0){alert("Narxni to‘g‘ri kiriting.");return}let p=pricesState.slice();p[i]=n;db.ref("prices").set(p)}
+function setImage(i,file){if(!file)return;if(file.size>1500000){alert("Rasm juda katta. Iltimos, 1.5MB dan kichikroq rasm tanlang.");return}
+  let reader=new FileReader();
+  reader.onload=function(e){let m=imagesState.slice();m[i]=e.target.result;db.ref("images").set(m).catch(()=>alert("Rasm saqlanmadi. Qayta urinib ko'ring."))};
+  reader.readAsDataURL(file);
+}
+function removeImage(i){let m=imagesState.slice();m[i]=null;db.ref("images").set(m)}
+
+function render(){let stock=getStock(),prices=getPrices(),images=getImages();document.getElementById("menu").innerHTML=products.map((p,i)=>{let img=images[i]?`<img src="${images[i]}" style="width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:8px">`:"";return stock[i]?`<div class="card">${img}<h3>${p[0]}</h3><div class="price">${money(prices[i])}</div><div class="controls"><button class="minus" onclick="chg(${i},-1)">−</button><input class="qty" type="number" min="0" value="${cart[i]}" onchange="setQty(${i},this.value)"><button class="plus" onclick="chg(${i},1)">+</button></div></div>`:`<div class="card" style="opacity:.55">${img}<h3>${p[0]}</h3><div class="price">${money(prices[i])}</div><div class="controls"><b style="color:#8b1e16">❌ Tugadi</b></div></div>`}).join("");
+let total=0,s="";products.forEach((p,i)=>{if(cart[i]){let x=cart[i]*prices[i];total+=x;s+=`<div class="row"><span>${p[0]} × ${cart[i]}</span><b>${money(x)}</b></div>`}});document.getElementById("summary").innerHTML=`<h3>Savat</h3>${s||"Savat bo‘sh"}<div class="row total"><span>Jami</span><span>${money(total)}</span></div>`}
+function chg(i,n){if(!getStock()[i])return;cart[i]=Math.max(0,cart[i]+n);render()}
+function setQty(i,v){if(!getStock()[i]){cart[i]=0;render();return}let n=parseInt(v);cart[i]=isNaN(n)||n<0?0:n;render()}
+
+function buildTelegramText(o){
+  let lines=[`🥟 <b>Yangi zakaz #${o.id}</b>`,
+    `👤 ${o.name}`,
+    `📞 ${o.phone}`,
+    `🚗 ${o.deliveryType}`,
+    o.deliveryType==="Yetkazib berish"?`📍 ${o.address||"—"}`:``,
+    `💳 ${o.payment}`,
+    `⏰ Kerakli sana/vaqt: ${o.wantDate} ${o.wantTime}`,
+    ``];
+  o.items.forEach(it=>lines.push(`• ${it.name} × ${it.qty} = ${money(it.qty*it.price)}`));
+  lines.push(``,`<b>Jami: ${money(o.total)}</b>`,`🕒 ${o.time}`);
+  return lines.join("\n");
+}
+
+async function sendToTelegram(o){
+  try{
+    const res=await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:buildTelegramText(o),parse_mode:"HTML"})
+    });
+    if(!res.ok){console.error("Telegramga yuborishda xato:",await res.text())}
+  }catch(e){console.error("Telegramga ulanishda xato:",e)}
+}
+
+function placeOrder(){let prices=getPrices(),total=cart.reduce((a,q,i)=>a+q*prices[i],0),name=document.getElementById("name").value.trim(),phone=document.getElementById("phone").value.trim(),deliveryType=document.getElementById("deliveryType").value,address=document.getElementById("address").value.trim(),wantDate=document.getElementById("wantDate").value,wantTime=document.getElementById("wantTime").value;if(!total)return alert("Somsa tanlang.");if(!name||!phone)return alert("Ism va telefonni kiriting.");if(deliveryType==="Yetkazib berish"&&!address)return alert("Yetkazib berish uchun manzilni kiriting.");if(!wantDate)return alert("Zakazni qaysi sanaga xohlaysiz — sanani kiriting.");if(!wantTime)return alert("Zakazni qaysi soatga xohlaysiz — vaqtni kiriting.");
+let orderData={name,phone,deliveryType,address,payment:document.getElementById("payment").value,wantDate,wantTime,items:products.map((p,i)=>({name:p[0],qty:cart[i],price:prices[i]})).filter(x=>x.qty),total,status:"Yangi",time:new Date().toLocaleString("uz-UZ"),ts:Date.now()};
+let newRef=db.ref("orders").push();
+newRef.set(orderData).then(()=>{
+  let o={...orderData,id:newRef.key};
+  sendToTelegram(o);
+  cart.fill(0);render();document.getElementById("address").value="";document.getElementById("wantDate").value="";document.getElementById("wantTime").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Zakaz qabul qilindi!<br>Zakaz raqamingiz: <b>${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;show("shop");
+}).catch(err=>{alert("Xato: zakaz yuborilmadi. Internetni tekshirib qayta urinib ko'ring.");console.error(err)});
+}
+
+function trackOrder(){
+  let id=document.getElementById("trackId").value.trim();
+  let box=document.getElementById("trackResult");
+  if(!id){box.innerHTML="Iltimos, zakaz raqamini kiriting.";return}
+  box.innerHTML="Qidirilmoqda...";
+  db.ref("orders/"+id).once("value").then(snap=>{
+    let o=snap.val();
+    if(!o){box.innerHTML="❌ Bunday raqamli zakaz topilmadi.";return}
+    box.innerHTML=`<div class="orderbox"><b>#${id}</b> — ${o.time}<br>👤 ${o.name}<br>⏰ Kerakli sana/vaqt: ${o.wantDate} ${o.wantTime}<hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}</div><div class="status">Holat: ${o.status}</div></div>`;
+  }).catch(()=>{box.innerHTML="❌ Qidirishda xato. Internetni tekshiring."});
+}
+
+function show(id){document.getElementById("shop").classList.toggle("hidden",id!=="shop");document.getElementById("track").classList.toggle("hidden",id!=="track");document.getElementById("admin").classList.toggle("hidden",id!=="admin")}
+
+/* ===== MIJOZ KIRISH DARVOZASI (Telegram bot orqali kod — oddiy HTTPS so'rovlar orqali, WebSocket'siz) ===== */
+let gatePollId=null,currentPhoneKey=null;
+const GATE_BOT="tasdiqlasomsa_bot";
+const REST_DB="https://kishmish-somsa-default-rtdb.firebaseio.com";
+
+function genCode(){return String(Math.floor(100000+Math.random()*900000))}
+
+async function restGet(path){
+  let res=await fetch(`${REST_DB}/${path}.json`);
+  if(!res.ok)throw new Error("DB xato: "+res.status);
+  return res.json();
+}
+async function restPut(path,value){
+  let res=await fetch(`${REST_DB}/${path}.json`,{method:"PUT",body:JSON.stringify(value)});
+  if(!res.ok)throw new Error("DB xato: "+res.status);
+  return res.json();
+}
+async function restPatch(path,value){
+  let res=await fetch(`${REST_DB}/${path}.json`,{method:"PATCH",body:JSON.stringify(value)});
+  if(!res.ok)throw new Error("DB xato: "+res.status);
+  return res.json();
+}
+
+window.onerror=function(msg,src,line,col,err){
+  alert("Sahifada xato: "+msg+" (qator "+line+")");
+  return false;
+};
+
+function requestAccess(){
+ try{
+  let phoneRaw=document.getElementById("gatePhone").value.trim();
+  if(!phoneRaw)return alert("Telefon raqamingizni kiriting.");
+  let key=phoneRaw.replace(/\D/g,"");
+  if(key.length<9)return alert("Telefon raqamini to‘g‘ri kiriting.");
+  currentPhoneKey=key;
+  let btn=document.querySelector('#gateForm button');
+  btn.disabled=true;btn.textContent="Yuborilmoqda...";
+  let code=genCode();
+  let timedOut=false;
+  let timeoutId=setTimeout(()=>{
+    timedOut=true;
+    btn.disabled=false;btn.textContent="Telegram orqali kod olish";
+    alert("Ulanish juda uzoq davom etyapti. Internetni tekshirib qayta urinib ko'ring.");
+  },10000);
+  restPut("verifications/"+key,{phone:phoneRaw,code,verified:false,requestedAt:Date.now()}).then(()=>{
+    if(timedOut)return;
+    clearTimeout(timeoutId);
+    btn.disabled=false;btn.textContent="Telegram orqali kod olish";
+    document.getElementById("gateForm").classList.add("hidden");
+    document.getElementById("gateCodeBox").classList.remove("hidden");
+    let tgUrl="https://t.me/"+GATE_BOT+"?start="+key;
+    document.getElementById("gateTgLink").href=tgUrl;
+    document.getElementById("gateTgLink").textContent="📲 Botni ochish (bosing)";
+    startVerificationPolling(key);
+  }).catch(err=>{
+    if(timedOut)return;
+    clearTimeout(timeoutId);
+    console.error("requestAccess xatosi:",err);
+    btn.disabled=false;btn.textContent="Telegram orqali kod olish";
+    alert("Ulanishda xato: "+(err&&err.message?err.message:"noma'lum xato"));
+  });
+ }catch(e){
+  alert("Sinxron xato: "+e.message);
+ }
+}
+
+function confirmCode(){
+  let code=document.getElementById("gateCode").value.trim();
+  if(!code)return alert("Kodni kiriting.");
+  if(!currentPhoneKey)return alert("Avval telefon raqamini kiriting.");
+  let confirmBtn=document.querySelector('#gateCodeBox button.order');
+  confirmBtn.disabled=true;confirmBtn.textContent="Tekshirilmoqda...";
+  restGet("verifications/"+currentPhoneKey).then(v=>{
+    if(!v){confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";alert("So'rov topilmadi. Qaytadan urinib ko'ring.");return}
+    if(String(v.code)!==code){confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";alert("Kod noto‘g‘ri. Qaytadan kiriting.");return}
+    return restPatch("verifications/"+currentPhoneKey,{verified:true}).then(()=>{
+      confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";
+      unlockApp();
+    });
+  }).catch(err=>{
+    confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";
+    alert("Xato: "+err.message);
+  });
+}
+
+function startVerificationPolling(key){
+  if(gatePollId)clearInterval(gatePollId);
+  gatePollId=setInterval(()=>{
+    restGet("verifications/"+key).then(v=>{
+      if(v&&v.verified){
+        clearInterval(gatePollId);
+        unlockApp();
+      }
+    }).catch(()=>{});
+  },3000);
+}
+
+function unlockApp(){
+  document.getElementById("loginGate").classList.add("hidden");
+  document.getElementById("appContainer").classList.remove("hidden");
+}
+/* =================================== */
+
+function login(){
+  let email=document.getElementById("adminEmail").value.trim(),pass=document.getElementById("pass").value;
+  document.getElementById("loginMsg").textContent="";
+  if(!email||!pass){document.getElementById("loginMsg").textContent="Email va parolni kiriting.";return}
+  auth.signInWithEmailAndPassword(email,pass).catch(err=>{
+    document.getElementById("loginMsg").textContent="Email yoki parol noto‘g‘ri.";
+  });
+}
+function logout(){auth.signOut()}
+
+if(firebaseReady)auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("panel").classList.remove("hidden");
+    document.getElementById("whoAmI").textContent=user.email;
+    listenOrders();
+    listenVerifications();
+  }else{
+    document.getElementById("loginBox").classList.remove("hidden");
+    document.getElementById("panel").classList.add("hidden");
+    if(ordersListenerRef){ordersListenerRef.off();ordersListenerRef=null}
+    if(verificationsListenerRef){verificationsListenerRef.off();verificationsListenerRef=null}
+  }
+});
+
+let ordersListenerRef=null;
+let verificationsListenerRef=null;
+let verificationsState=[];
+function listenVerifications(){
+  if(verificationsListenerRef)return;
+  verificationsListenerRef=db.ref("verifications");
+  verificationsListenerRef.on("value",snap=>{
+    let val=snap.val()||{};
+    verificationsState=Object.keys(val).map(k=>({key:k,...val[k]})).sort((a,b)=>(b.requestedAt||0)-(a.requestedAt||0));
+    renderVerifications();
+  });
+}
+function approveVerification(key){db.ref("verifications/"+key+"/verified").set(true);db.ref("verifications/"+key+"/verifiedAt").set(Date.now())}
+function revokeVerification(key){db.ref("verifications/"+key+"/verified").set(false)}
+function renderVerifications(){
+  let box=document.getElementById("verifications");
+  if(!box)return;
+  if(!verificationsState.length){box.innerHTML="<p>Hozircha so‘rov yo‘q.</p>";return}
+  box.innerHTML=verificationsState.map(v=>`<div class="pending-row"><span>📞 ${v.phone}${v.verified?" ✅":""}</span>${v.verified?`<button class="danger" style="width:auto" onclick="revokeVerification('${v.key}')">Bekor qilish</button>`:`<button style="width:auto;background:#dff2df" onclick="approveVerification('${v.key}')">Tasdiqlash</button>`}</div>`).join("");
+}
+function listenOrders(){
+  if(ordersListenerRef)return;
+  ordersListenerRef=db.ref("orders");
+  ordersListenerRef.on("value",snap=>{
+    let val=snap.val()||{};
+    ordersState=Object.keys(val).map(k=>({id:k,...val[k]})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    renderAdmin();
+  });
+}
+
+function renderAdmin(){
+  let stock=getStock(),prices=getPrices(),images=getImages();
+  document.getElementById("stockPanel").innerHTML=products.map((p,i)=>`<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:1px solid #eee;padding-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:center"><span><b>${p[0]}</b></span><span style="display:flex;gap:6px;align-items:center"><input class="qty" style="width:80px" type="number" min="0" value="${prices[i]}" onchange="setPrice(${i},this.value)"><button style="background:${stock[i]?'#dff2df':'#f4c7c7'}" onclick="toggleStock(${i})">${stock[i]?'✅ Bor':'❌ Yo‘q'}</button></span></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    ${images[i]?`<img src="${images[i]}" style="width:60px;height:60px;object-fit:cover;border-radius:8px">`:`<div style="width:60px;height:60px;background:#f0e0d1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#888">rasm yo'q</div>`}
+    <input type="file" accept="image/*" onchange="setImage(${i},this.files[0])" style="margin:0;padding:6px">
+    ${images[i]?`<button class="danger" onclick="removeImage(${i})">🗑 O'chirish</button>`:""}
+  </div>
+</div>`).join("");
+  let sum=ordersState.reduce((x,o)=>x+o.total,0);
+  document.getElementById("stats").innerHTML=`<div class="box"><b>Zakazlar:</b> ${ordersState.length} &nbsp; <b>Tushum:</b> ${money(sum)}</div>`;
+  document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🚗 ${o.deliveryType||"—"}${o.deliveryType==="Yetkazib berish"?`<br>📍 ${o.address||"—"}`:""}<br>💳 ${o.payment}<br>⏰ Kerakli sana/vaqt: <b>${o.wantDate||"—"} ${o.wantTime||""}</b><hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Yetkazilmoqda"?"selected":""}>Yetkazilmoqda</option><option ${o.status=="Yetkazildi"?"selected":""}>Yetkazildi</option></select></div></div>`).join("")||"<p>Hozircha zakaz yo‘q.</p>";
+}
+function setStatus(id,v){db.ref("orders/"+id+"/status").set(v)}
+function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){db.ref("orders").remove()}}
+
+function togglePaymentInfo(){document.getElementById("cardInfo").classList.toggle("hidden",document.getElementById("payment").value!=="Karta")}
+function toggleAddress(){document.getElementById("addressBox").classList.toggle("hidden",document.getElementById("deliveryType").value!=="Yetkazib berish")}
+render();
+
+// Buyurtma sanasi: bugundan oldingi kun tanlanmasin
+document.getElementById("wantDate").min=new Date().toISOString().split("T")[0];
+
+// Firebase ulanishini tekshirish — muammo bo'lsa mijozga ko'rsatiladi
+setTimeout(()=>{
+  db.ref(".info/connected").once("value").catch(err=>{
+    console.error("Firebase ulanish xatosi:",err);
+    document.getElementById("gateForm").innerHTML="<h2>⚠️ Ulanishda muammo</h2><p>Internetni tekshiring yoki keyinroq qayta urinib ko'ring.</p>";
+  });
+},4000);
+</script></body></html>
