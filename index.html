@@ -2,24 +2,33 @@
 <html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kishmish Somsa</title>
 <style>
-body{margin:0;font-family:Arial;background:#fff8ef;color:#2d2118}header{background:#8b1e16;color:#fff;padding:20px;text-align:center}
+body{margin:0;font-family:Arial;color:#3a332c;
+  background-color:#f7ede0;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(198,140,66,0.16) 0, transparent 45%),
+    radial-gradient(circle at 85% 10%, rgba(139,30,22,0.10) 0, transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(198,140,66,0.14) 0, transparent 50%),
+    repeating-radial-gradient(circle at center, rgba(139,30,22,0.035) 0, rgba(139,30,22,0.035) 1px, transparent 1px, transparent 22px);
+  background-attachment:fixed;
+}
+header{background:linear-gradient(135deg,#6b4a37,#4a3226);color:#f7ede0;padding:20px;text-align:center}
 main{max-width:900px;margin:auto;padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-.card,.box{background:#fff;padding:16px;border-radius:15px;box-shadow:0 3px 12px #0001;margin-bottom:15px}
-.price{color:#8b1e16;font-weight:bold;font-size:18px}.controls{display:flex;gap:10px;align-items:center;margin-top:12px}
-button{border:0;border-radius:9px;padding:10px 14px;font-weight:bold;cursor:pointer}.plus,.minus{background:#f0e0d1}.order{background:#8b1e16;color:#fff;width:100%;font-size:17px}
-input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid #d8c7b7;border-radius:9px;box-sizing:border-box}
-.row{display:flex;justify-content:space-between;padding:7px 0}.total{font-size:21px;font-weight:bold;border-top:1px solid #ddd;margin-top:8px}
-.nav{display:flex;gap:8px;margin-bottom:15px}.nav button{flex:1}.hidden{display:none}.orderbox{border-left:5px solid #8b1e16;padding:12px;margin:12px 0;background:#fff}
-.status{font-weight:bold}.danger{background:#f4c7c7}.success{background:#dff2df;padding:12px;border-radius:9px;display:none}
+.card,.box{background:#fff;padding:16px;border-radius:12px;border:1px solid #eae5dd;margin-bottom:15px}
+.price{color:#8a6a52;font-weight:bold;font-size:17px}.controls{display:flex;gap:10px;align-items:center;margin-top:12px}
+button{border:0;border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer}.plus,.minus{background:#f1ece3}.order{background:#8a6a52;color:#fff;width:100%;font-size:16px}
+input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid #ddd5c8;border-radius:8px;box-sizing:border-box;background:#fdfcfa}
+.row{display:flex;justify-content:space-between;padding:7px 0}.total{font-size:19px;font-weight:bold;border-top:1px solid #eae5dd;margin-top:8px}
+.nav{display:flex;gap:8px;margin-bottom:15px}.nav button{flex:1;background:#efe9df;color:#3a332c}.hidden{display:none}.orderbox{border-left:3px solid #8a6a52;padding:12px;margin:12px 0;background:#fff;border-radius:0 10px 10px 0}
+.status{font-weight:bold}.danger{background:#f1dcd6;color:#7a3b2e}.success{background:#e4ede2;padding:12px;border-radius:9px;display:none}
 .qty{width:50px;text-align:center;margin:0;padding:8px 4px}
 .track-result{margin-top:12px}
-.loading{text-align:center;padding:20px;color:#8b1e16}
+.loading{text-align:center;padding:20px;color:#8a6a52}
 .gate{max-width:420px;margin:60px auto;padding:0 18px}
 .gate .box{text-align:center}
 .gate-waiting{padding:20px 0}
-.dot-spin{display:inline-block;width:34px;height:34px;border:4px solid #f0e0d1;border-top-color:#8b1e16;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:14px}
+.dot-spin{display:inline-block;width:32px;height:32px;border:3px solid #efe9df;border-top-color:#8a6a52;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:14px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.tg-btn{display:inline-block;background:#229ED9;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:bold;margin-top:10px}
+.tg-btn{display:inline-block;background:#4a90c4;color:#fff;text-decoration:none;padding:11px 18px;border-radius:8px;font-weight:600;margin-top:10px}
 .pending-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:8px 0}
 </style></head><body>
 <header><h1>🥟 Baqachorsu Kishmish Somsa</h1><div>08:00–14:30</div><div>Qo‘qon shahar, Navoiy, Saodat masjid filiali</div></header>
@@ -78,7 +87,6 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
 </main>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script>
 /* ===== FIREBASE SOZLAMALARI ===== */
 const firebaseConfig = {
@@ -90,14 +98,13 @@ const firebaseConfig = {
   messagingSenderId: "1007286693232",
   appId: "1:1007286693232:web:2049262c837f32b91933b5"
 };
-let auth, db, firebaseReady = false;
+let auth, firebaseReady = false;
 try{
   if(typeof firebase === "undefined"){
     throw new Error("Firebase kutubxonasi yuklanmadi (internet yoki tarmoq bloklovi bo'lishi mumkin).");
   }
   firebase.initializeApp(firebaseConfig);
   auth = firebase.auth();
-  db = firebase.database();
   firebaseReady = true;
 }catch(e){
   console.error("Firebase ishga tushmadi:",e);
@@ -105,6 +112,29 @@ try{
     let gf=document.getElementById("gateForm");
     if(gf)gf.innerHTML="<h2>⚠️ Ulanishda muammo</h2><p>"+e.message+"</p><p style='font-size:13px;color:#8b6f5c'>Internetni tekshirib, sahifani qayta yuklang.</p>";
   });
+}
+/* ================================= */
+
+/* ===== ODDIY HTTPS SO'ROVLAR (WebSocket'siz, ishonchli) ===== */
+const REST_DB="https://kishmish-somsa-default-rtdb.firebaseio.com";
+let adminIdToken=null;
+
+async function restGet(path){
+  let res=await fetch(`${REST_DB}/${path}.json`);
+  if(!res.ok)throw new Error("DB xato: "+res.status);
+  return res.json();
+}
+async function restPut(path,value,useAuth){
+  let url=`${REST_DB}/${path}.json`+(useAuth&&adminIdToken?`?auth=${adminIdToken}`:"");
+  let res=await fetch(url,{method:"PUT",body:JSON.stringify(value)});
+  if(!res.ok)throw new Error("DB xato: "+res.status);
+  return res.json();
+}
+async function restPatch(path,value,useAuth){
+  let url=`${REST_DB}/${path}.json`+(useAuth&&adminIdToken?`?auth=${adminIdToken}`:"");
+  let res=await fetch(url,{method:"PATCH",body:JSON.stringify(value)});
+  if(!res.ok)throw new Error("DB xato: "+res.status);
+  return res.json();
 }
 /* ================================= */
 
@@ -122,25 +152,50 @@ let pricesState=products.map(x=>x[1]);
 let imagesState=products.map(()=>null);
 let ordersState=[]; // faqat admin login qilgach to'ladi
 
-// --- Real-vaqtda tinglovchilar: hamma o'qiy oladi (mavjudlik, narx, rasm) ---
-if(firebaseReady){
-  db.ref("stock").on("value",snap=>{let v=snap.val();stockState=v&&v.length===products.length?v:products.map(()=>true);render()});
-  db.ref("prices").on("value",snap=>{let v=snap.val();pricesState=v&&v.length===products.length?v:products.map(x=>x[1]);render()});
-  db.ref("images").on("value",snap=>{let v=snap.val();imagesState=v&&v.length===products.length?v:products.map(()=>null);render()});
+// --- Ochiq ma'lumotlarni (mavjudlik, narx, rasm) muntazam yangilab turish, oddiy so'rov orqali ---
+async function loadPublicData(){
+  try{
+    const [stock,prices,images]=await Promise.all([
+      restGet("stock"),restGet("prices"),restGet("images")
+    ]);
+    stockState=stock&&stock.length===products.length?stock:products.map(()=>true);
+    pricesState=prices&&prices.length===products.length?prices:products.map(x=>x[1]);
+    imagesState=images&&images.length===products.length?images:products.map(()=>null);
+    render();
+  }catch(e){
+    console.error("loadPublicData xatosi:",e);
+  }
 }
+loadPublicData();
+setInterval(loadPublicData,4000);
 
 function getStock(){return stockState}
 function getPrices(){return pricesState}
 function getImages(){return imagesState}
 
-function toggleStock(i){let s=stockState.slice();s[i]=!s[i];db.ref("stock").set(s)}
-function setPrice(i,v){let n=parseInt(v);if(isNaN(n)||n<0){alert("Narxni to‘g‘ri kiriting.");return}let p=pricesState.slice();p[i]=n;db.ref("prices").set(p)}
-function setImage(i,file){if(!file)return;if(file.size>1500000){alert("Rasm juda katta. Iltimos, 1.5MB dan kichikroq rasm tanlang.");return}
+async function toggleStock(i){
+  let s=stockState.slice();s[i]=!s[i];stockState=s;render();renderAdmin();
+  try{await restPut("stock",s,true)}catch(e){alert("Saqlashda xato: "+e.message)}
+}
+async function setPrice(i,v){
+  let n=parseInt(v);if(isNaN(n)||n<0){alert("Narxni to‘g‘ri kiriting.");return}
+  let p=pricesState.slice();p[i]=n;pricesState=p;render();
+  try{await restPut("prices",p,true)}catch(e){alert("Saqlashda xato: "+e.message)}
+}
+function setImage(i,file){
+  if(!file)return;
+  if(file.size>1500000){alert("Rasm juda katta. Iltimos, 1.5MB dan kichikroq rasm tanlang.");return}
   let reader=new FileReader();
-  reader.onload=function(e){let m=imagesState.slice();m[i]=e.target.result;db.ref("images").set(m).catch(()=>alert("Rasm saqlanmadi. Qayta urinib ko'ring."))};
+  reader.onload=async function(e){
+    let m=imagesState.slice();m[i]=e.target.result;imagesState=m;render();renderAdmin();
+    try{await restPut("images",m,true)}catch(err){alert("Rasm saqlanmadi: "+err.message)}
+  };
   reader.readAsDataURL(file);
 }
-function removeImage(i){let m=imagesState.slice();m[i]=null;db.ref("images").set(m)}
+async function removeImage(i){
+  let m=imagesState.slice();m[i]=null;imagesState=m;render();renderAdmin();
+  try{await restPut("images",m,true)}catch(e){alert("Saqlashda xato: "+e.message)}
+}
 
 function render(){let stock=getStock(),prices=getPrices(),images=getImages();document.getElementById("menu").innerHTML=products.map((p,i)=>{let img=images[i]?`<img src="${images[i]}" style="width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:8px">`:"";return stock[i]?`<div class="card">${img}<h3>${p[0]}</h3><div class="price">${money(prices[i])}</div><div class="controls"><button class="minus" onclick="chg(${i},-1)">−</button><input class="qty" type="number" min="0" value="${cart[i]}" onchange="setQty(${i},this.value)"><button class="plus" onclick="chg(${i},1)">+</button></div></div>`:`<div class="card" style="opacity:.55">${img}<h3>${p[0]}</h3><div class="price">${money(prices[i])}</div><div class="controls"><b style="color:#8b1e16">❌ Tugadi</b></div></div>`}).join("");
 let total=0,s="";products.forEach((p,i)=>{if(cart[i]){let x=cart[i]*prices[i];total+=x;s+=`<div class="row"><span>${p[0]} × ${cart[i]}</span><b>${money(x)}</b></div>`}});document.getElementById("summary").innerHTML=`<h3>Savat</h3>${s||"Savat bo‘sh"}<div class="row total"><span>Jami</span><span>${money(total)}</span></div>`}
@@ -174,9 +229,9 @@ async function sendToTelegram(o){
 
 function placeOrder(){let prices=getPrices(),total=cart.reduce((a,q,i)=>a+q*prices[i],0),name=document.getElementById("name").value.trim(),phone=document.getElementById("phone").value.trim(),deliveryType=document.getElementById("deliveryType").value,address=document.getElementById("address").value.trim(),wantDate=document.getElementById("wantDate").value,wantTime=document.getElementById("wantTime").value;if(!total)return alert("Somsa tanlang.");if(!name||!phone)return alert("Ism va telefonni kiriting.");if(deliveryType==="Yetkazib berish"&&!address)return alert("Yetkazib berish uchun manzilni kiriting.");if(!wantDate)return alert("Zakazni qaysi sanaga xohlaysiz — sanani kiriting.");if(!wantTime)return alert("Zakazni qaysi soatga xohlaysiz — vaqtni kiriting.");
 let orderData={name,phone,deliveryType,address,payment:document.getElementById("payment").value,wantDate,wantTime,items:products.map((p,i)=>({name:p[0],qty:cart[i],price:prices[i]})).filter(x=>x.qty),total,status:"Yangi",time:new Date().toLocaleString("uz-UZ"),ts:Date.now()};
-let newRef=db.ref("orders").push();
-newRef.set(orderData).then(()=>{
-  let o={...orderData,id:newRef.key};
+let orderId="o"+Date.now()+Math.random().toString(36).slice(2,8);
+restPut("orders/"+orderId,orderData).then(()=>{
+  let o={...orderData,id:orderId};
   sendToTelegram(o);
   cart.fill(0);render();document.getElementById("address").value="";document.getElementById("wantDate").value="";document.getElementById("wantTime").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Zakaz qabul qilindi!<br>Zakaz raqamingiz: <b>${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;show("shop");
 }).catch(err=>{alert("Xato: zakaz yuborilmadi. Internetni tekshirib qayta urinib ko'ring.");console.error(err)});
@@ -187,8 +242,7 @@ function trackOrder(){
   let box=document.getElementById("trackResult");
   if(!id){box.innerHTML="Iltimos, zakaz raqamini kiriting.";return}
   box.innerHTML="Qidirilmoqda...";
-  db.ref("orders/"+id).once("value").then(snap=>{
-    let o=snap.val();
+  restGet("orders/"+id).then(o=>{
     if(!o){box.innerHTML="❌ Bunday raqamli zakaz topilmadi.";return}
     box.innerHTML=`<div class="orderbox"><b>#${id}</b> — ${o.time}<br>👤 ${o.name}<br>⏰ Kerakli sana/vaqt: ${o.wantDate} ${o.wantTime}<hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}</div><div class="status">Holat: ${o.status}</div></div>`;
   }).catch(()=>{box.innerHTML="❌ Qidirishda xato. Internetni tekshiring."});
@@ -199,25 +253,8 @@ function show(id){document.getElementById("shop").classList.toggle("hidden",id!=
 /* ===== MIJOZ KIRISH DARVOZASI (Telegram bot orqali kod — oddiy HTTPS so'rovlar orqali, WebSocket'siz) ===== */
 let gatePollId=null,currentPhoneKey=null;
 const GATE_BOT="tasdiqlasomsa_bot";
-const REST_DB="https://kishmish-somsa-default-rtdb.firebaseio.com";
 
 function genCode(){return String(Math.floor(100000+Math.random()*900000))}
-
-async function restGet(path){
-  let res=await fetch(`${REST_DB}/${path}.json`);
-  if(!res.ok)throw new Error("DB xato: "+res.status);
-  return res.json();
-}
-async function restPut(path,value){
-  let res=await fetch(`${REST_DB}/${path}.json`,{method:"PUT",body:JSON.stringify(value)});
-  if(!res.ok)throw new Error("DB xato: "+res.status);
-  return res.json();
-}
-async function restPatch(path,value){
-  let res=await fetch(`${REST_DB}/${path}.json`,{method:"PATCH",body:JSON.stringify(value)});
-  if(!res.ok)throw new Error("DB xato: "+res.status);
-  return res.json();
-}
 
 window.onerror=function(msg,src,line,col,err){
   alert("Sahifada xato: "+msg+" (qator "+line+")");
@@ -309,49 +346,71 @@ function login(){
 }
 function logout(){auth.signOut()}
 
-if(firebaseReady)auth.onAuthStateChanged(user=>{
+if(firebaseReady)auth.onAuthStateChanged(async user=>{
   if(user){
+    adminIdToken=await user.getIdToken();
     document.getElementById("loginBox").classList.add("hidden");
     document.getElementById("panel").classList.remove("hidden");
     document.getElementById("whoAmI").textContent=user.email;
-    listenOrders();
-    listenVerifications();
+    startOrdersPolling();
+    startVerificationsPolling();
   }else{
+    adminIdToken=null;
     document.getElementById("loginBox").classList.remove("hidden");
     document.getElementById("panel").classList.add("hidden");
-    if(ordersListenerRef){ordersListenerRef.off();ordersListenerRef=null}
-    if(verificationsListenerRef){verificationsListenerRef.off();verificationsListenerRef=null}
+    if(ordersPollId){clearInterval(ordersPollId);ordersPollId=null}
+    if(verificationsPollId){clearInterval(verificationsPollId);verificationsPollId=null}
   }
 });
 
-let ordersListenerRef=null;
-let verificationsListenerRef=null;
+let ordersPollId=null;
+let verificationsPollId=null;
 let verificationsState=[];
-function listenVerifications(){
-  if(verificationsListenerRef)return;
-  verificationsListenerRef=db.ref("verifications");
-  verificationsListenerRef.on("value",snap=>{
-    let val=snap.val()||{};
+
+async function loadVerifications(){
+  try{
+    let val=await restGet("verifications");
+    val=val||{};
     verificationsState=Object.keys(val).map(k=>({key:k,...val[k]})).sort((a,b)=>(b.requestedAt||0)-(a.requestedAt||0));
     renderVerifications();
-  });
+  }catch(e){console.error("loadVerifications xatosi:",e)}
 }
-function approveVerification(key){db.ref("verifications/"+key+"/verified").set(true);db.ref("verifications/"+key+"/verifiedAt").set(Date.now())}
-function revokeVerification(key){db.ref("verifications/"+key+"/verified").set(false)}
+function startVerificationsPolling(){
+  if(verificationsPollId)return;
+  loadVerifications();
+  verificationsPollId=setInterval(loadVerifications,4000);
+}
+async function approveVerification(key){
+  try{
+    await restPatch("verifications/"+key,{verified:true,verifiedAt:Date.now()});
+    loadVerifications();
+  }catch(e){alert("Xato: "+e.message)}
+}
+async function revokeVerification(key){
+  try{
+    await restPatch("verifications/"+key,{verified:false});
+    loadVerifications();
+  }catch(e){alert("Xato: "+e.message)}
+}
 function renderVerifications(){
   let box=document.getElementById("verifications");
   if(!box)return;
   if(!verificationsState.length){box.innerHTML="<p>Hozircha so‘rov yo‘q.</p>";return}
   box.innerHTML=verificationsState.map(v=>`<div class="pending-row"><span>📞 ${v.phone}${v.verified?" ✅":""}</span>${v.verified?`<button class="danger" style="width:auto" onclick="revokeVerification('${v.key}')">Bekor qilish</button>`:`<button style="width:auto;background:#dff2df" onclick="approveVerification('${v.key}')">Tasdiqlash</button>`}</div>`).join("");
 }
-function listenOrders(){
-  if(ordersListenerRef)return;
-  ordersListenerRef=db.ref("orders");
-  ordersListenerRef.on("value",snap=>{
-    let val=snap.val()||{};
+
+async function loadOrders(){
+  try{
+    let val=await restGet("orders");
+    val=val||{};
     ordersState=Object.keys(val).map(k=>({id:k,...val[k]})).sort((a,b)=>(b.ts||0)-(a.ts||0));
     renderAdmin();
-  });
+  }catch(e){console.error("loadOrders xatosi:",e)}
+}
+function startOrdersPolling(){
+  if(ordersPollId)return;
+  loadOrders();
+  ordersPollId=setInterval(loadOrders,4000);
 }
 
 function renderAdmin(){
@@ -368,8 +427,8 @@ function renderAdmin(){
   document.getElementById("stats").innerHTML=`<div class="box"><b>Zakazlar:</b> ${ordersState.length} &nbsp; <b>Tushum:</b> ${money(sum)}</div>`;
   document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🚗 ${o.deliveryType||"—"}${o.deliveryType==="Yetkazib berish"?`<br>📍 ${o.address||"—"}`:""}<br>💳 ${o.payment}<br>⏰ Kerakli sana/vaqt: <b>${o.wantDate||"—"} ${o.wantTime||""}</b><hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Yetkazilmoqda"?"selected":""}>Yetkazilmoqda</option><option ${o.status=="Yetkazildi"?"selected":""}>Yetkazildi</option></select></div></div>`).join("")||"<p>Hozircha zakaz yo‘q.</p>";
 }
-function setStatus(id,v){db.ref("orders/"+id+"/status").set(v)}
-function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){db.ref("orders").remove()}}
+function setStatus(id,v){restPatch("orders/"+id,{status:v}).then(loadOrders).catch(e=>alert("Xato: "+e.message))}
+function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){restPut("orders",null).then(loadOrders).catch(e=>alert("Xato: "+e.message))}}
 
 function togglePaymentInfo(){document.getElementById("cardInfo").classList.toggle("hidden",document.getElementById("payment").value!=="Karta")}
 function toggleAddress(){document.getElementById("addressBox").classList.toggle("hidden",document.getElementById("deliveryType").value!=="Yetkazib berish")}
@@ -377,12 +436,4 @@ render();
 
 // Buyurtma sanasi: bugundan oldingi kun tanlanmasin
 document.getElementById("wantDate").min=new Date().toISOString().split("T")[0];
-
-// Firebase ulanishini tekshirish — muammo bo'lsa mijozga ko'rsatiladi
-setTimeout(()=>{
-  db.ref(".info/connected").once("value").catch(err=>{
-    console.error("Firebase ulanish xatosi:",err);
-    document.getElementById("gateForm").innerHTML="<h2>⚠️ Ulanishda muammo</h2><p>Internetni tekshiring yoki keyinroq qayta urinib ko'ring.</p>";
-  });
-},4000);
 </script></body></html>
