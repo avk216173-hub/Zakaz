@@ -21,6 +21,8 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
 .nav{display:flex;gap:8px;margin-bottom:15px}.nav button{flex:1;background:#efe9df;color:#3a332c}.hidden{display:none}.orderbox{border-left:3px solid #8a6a52;padding:12px;margin:12px 0;background:#fff;border-radius:0 10px 10px 0}
 .status{font-weight:bold}.danger{background:#f1dcd6;color:#7a3b2e}.success{background:#e4ede2;padding:12px;border-radius:9px;display:none}
 .qty{width:50px;text-align:center;margin:0;padding:8px 4px}
+.wizard-step{margin-bottom:6px}
+.secondary{background:#efe9df;color:#5c4a3d}
 .track-result{margin-top:12px}
 .loading{text-align:center;padding:20px;color:#8a6a52}
 .gate{max-width:420px;margin:60px auto;padding:0 18px}
@@ -55,20 +57,53 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
 <div class="nav"><button onclick="show('shop')">Zakaz berish</button><button onclick="show('track')">Zakazni tekshirish</button><button onclick="show('admin')">Admin panel</button></div>
 
 <section id="shop"><h2>Somsa tanlang</h2><div class="grid" id="menu"><div class="loading">Yuklanmoqda...</div></div>
-<div class="box"><h2>Ma’lumotlar</h2><input id="name" placeholder="Ism"><input id="phone" placeholder="Telefon">
-<select id="deliveryType" onchange="toggleAddress()"><option value="Yetkazib berish">🚗 Yetkazib berish</option><option value="Olib ketish">🏠 O'zim olib ketaman</option></select>
-<div id="addressBox"><textarea id="address" placeholder="Manzil"></textarea></div>
-<label style="font-weight:bold">Yetkazib berish/olib ketish sanasi va vaqti *</label>
-<input id="wantDate" type="date">
-<input id="wantTime" type="time">
-<select id="payment" onchange="togglePaymentInfo()"><option>Naqd</option><option>Karta</option></select>
-<div id="cardInfo" class="hidden" style="background:#fff8ef;border:1px dashed #8b1e16;border-radius:9px;padding:12px;margin:-4px 0 12px">
-  💳 <b>Karta raqami:</b> 5614 6818 1543 2855<br>
-  👤 <b>Egasi:</b> Abdukarimov Botirjon<br>
-  <span style="font-size:14px">To'lovni shu kartaga o'tkazing, so'ng chekni (skrinshotni) Telegramda <b>@abdukarimov_l</b> ga yuboring.</span>
+<div class="box" id="orderWizard">
+<h2>Ma’lumotlar</h2>
+<div id="stepIndicator" style="font-size:13px;color:#8a6a52;margin-bottom:10px;font-weight:600"></div>
+
+<div class="wizard-step" data-step="1">
+  <label style="font-weight:bold">Ismingiz</label>
+  <input id="name" placeholder="Ism">
 </div>
-<div id="summary"></div>
-<button class="order" onclick="placeOrder()">Zakaz berish</button><div class="success" id="ok"></div></div></section>
+<div class="wizard-step hidden" data-step="2">
+  <label style="font-weight:bold">Telefon raqamingiz</label>
+  <input id="phone" placeholder="Telefon">
+</div>
+<div class="wizard-step hidden" data-step="3">
+  <label style="font-weight:bold">Qanday olasiz?</label>
+  <select id="deliveryType"><option value="Yetkazib berish">🚗 Yetkazib berish</option><option value="Olib ketish">🏠 O'zim olib ketaman</option></select>
+</div>
+<div class="wizard-step hidden" data-step="4">
+  <label style="font-weight:bold">Manzilingiz</label>
+  <textarea id="address" placeholder="Manzil"></textarea>
+</div>
+<div class="wizard-step hidden" data-step="5">
+  <label style="font-weight:bold">Qaysi sanaga kerak?</label>
+  <input id="wantDate" type="date">
+</div>
+<div class="wizard-step hidden" data-step="6">
+  <label style="font-weight:bold">Qaysi vaqtga kerak?</label>
+  <input id="wantTime" type="time">
+</div>
+<div class="wizard-step hidden" data-step="7">
+  <label style="font-weight:bold">To'lov turi</label>
+  <select id="payment" onchange="togglePaymentInfo()"><option>Naqd</option><option>Karta</option></select>
+  <div id="cardInfo" class="hidden" style="background:#fdfaf5;border:1px dashed #8a6a52;border-radius:9px;padding:12px;margin:-4px 0 12px">
+    💳 <b>Karta raqami:</b> 5614 6818 1543 2855<br>
+    👤 <b>Egasi:</b> Abdukarimov Botirjon<br>
+    <span style="font-size:14px">To'lovni shu kartaga o'tkazing, so'ng chekni (skrinshotni) Telegramda <b>@abdukarimov_l</b> ga yuboring.</span>
+  </div>
+</div>
+<div class="wizard-step hidden" data-step="8">
+  <div id="summary"></div>
+</div>
+
+<div style="display:flex;gap:8px;margin-top:6px">
+  <button id="wizBack" class="secondary" style="width:auto;display:none" onclick="wizardBack()">← Orqaga</button>
+  <button id="wizNext" class="order" onclick="wizardNext()">Keyingisi →</button>
+</div>
+<div class="success" id="ok"></div>
+</div></section>
 
 <section id="track" class="hidden"><div class="box"><h2>📦 Zakazni tekshirish</h2>
 <p>Zakaz berganingizda chiqqan <b>zakaz raqamini</b> kiriting.</p>
@@ -230,12 +265,63 @@ async function sendToTelegram(o){
 function placeOrder(){let prices=getPrices(),total=cart.reduce((a,q,i)=>a+q*prices[i],0),name=document.getElementById("name").value.trim(),phone=document.getElementById("phone").value.trim(),deliveryType=document.getElementById("deliveryType").value,address=document.getElementById("address").value.trim(),wantDate=document.getElementById("wantDate").value,wantTime=document.getElementById("wantTime").value;if(!total)return alert("Somsa tanlang.");if(!name||!phone)return alert("Ism va telefonni kiriting.");if(deliveryType==="Yetkazib berish"&&!address)return alert("Yetkazib berish uchun manzilni kiriting.");if(!wantDate)return alert("Zakazni qaysi sanaga xohlaysiz — sanani kiriting.");if(!wantTime)return alert("Zakazni qaysi soatga xohlaysiz — vaqtni kiriting.");
 let orderData={name,phone,deliveryType,address,payment:document.getElementById("payment").value,wantDate,wantTime,items:products.map((p,i)=>({name:p[0],qty:cart[i],price:prices[i]})).filter(x=>x.qty),total,status:"Yangi",time:new Date().toLocaleString("uz-UZ"),ts:Date.now()};
 let orderId="o"+Date.now()+Math.random().toString(36).slice(2,8);
+document.getElementById("wizNext").disabled=true;
 restPut("orders/"+orderId,orderData).then(()=>{
   let o={...orderData,id:orderId};
   sendToTelegram(o);
-  cart.fill(0);render();document.getElementById("address").value="";document.getElementById("wantDate").value="";document.getElementById("wantTime").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Zakaz qabul qilindi!<br>Zakaz raqamingiz: <b>${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;show("shop");
-}).catch(err=>{alert("Xato: zakaz yuborilmadi. Internetni tekshirib qayta urinib ko'ring.");console.error(err)});
+  cart.fill(0);render();document.getElementById("name").value="";document.getElementById("phone").value="";document.getElementById("address").value="";document.getElementById("wantDate").value="";document.getElementById("wantTime").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Zakaz qabul qilindi!<br>Zakaz raqamingiz: <b>${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;
+  document.getElementById("wizNext").disabled=false;
+  resetWizard();
+  show("shop");
+}).catch(err=>{alert("Xato: zakaz yuborilmadi. Internetni tekshirib qayta urinib ko'ring.");console.error(err);document.getElementById("wizNext").disabled=false;});
 }
+
+/* ===== BOSQICHMA-BOSQICH BUYURTMA FORMASI ===== */
+let wizardOrder=[1,2,3,4,5,6,7,8];
+let wizardPos=0;
+
+function computeWizardOrder(){
+  let arr=[1,2,3];
+  if(document.getElementById("deliveryType").value==="Yetkazib berish")arr.push(4);
+  arr.push(5,6,7,8);
+  return arr;
+}
+function showWizardStep(){
+  document.querySelectorAll(".wizard-step").forEach(el=>el.classList.add("hidden"));
+  let stepNum=wizardOrder[wizardPos];
+  document.querySelector(`.wizard-step[data-step="${stepNum}"]`).classList.remove("hidden");
+  document.getElementById("stepIndicator").textContent=`Qadam ${wizardPos+1} / ${wizardOrder.length}`;
+  document.getElementById("wizBack").style.display=wizardPos===0?"none":"inline-block";
+  document.getElementById("wizNext").textContent=stepNum===8?"Zakaz berish":"Keyingisi →";
+  document.getElementById("ok").style.display="none";
+}
+function validateWizardStep(stepNum){
+  if(stepNum===1&&!document.getElementById("name").value.trim()){alert("Ismingizni kiriting.");return false}
+  if(stepNum===2&&!document.getElementById("phone").value.trim()){alert("Telefon raqamingizni kiriting.");return false}
+  if(stepNum===4&&!document.getElementById("address").value.trim()){alert("Manzilingizni kiriting.");return false}
+  if(stepNum===5&&!document.getElementById("wantDate").value){alert("Sanani tanlang.");return false}
+  if(stepNum===6&&!document.getElementById("wantTime").value){alert("Vaqtni tanlang.");return false}
+  return true;
+}
+function wizardNext(){
+  let stepNum=wizardOrder[wizardPos];
+  if(!validateWizardStep(stepNum))return;
+  if(stepNum===8){placeOrder();return}
+  if(stepNum===3)wizardOrder=computeWizardOrder();
+  wizardPos++;
+  showWizardStep();
+}
+function wizardBack(){
+  if(wizardPos===0)return;
+  wizardPos--;
+  showWizardStep();
+}
+function resetWizard(){
+  wizardOrder=computeWizardOrder();
+  wizardPos=0;
+  showWizardStep();
+}
+/* =================================== */
 
 function trackOrder(){
   let id=document.getElementById("trackId").value.trim();
@@ -431,8 +517,8 @@ function setStatus(id,v){restPatch("orders/"+id,{status:v}).then(loadOrders).cat
 function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){restPut("orders",null).then(loadOrders).catch(e=>alert("Xato: "+e.message))}}
 
 function togglePaymentInfo(){document.getElementById("cardInfo").classList.toggle("hidden",document.getElementById("payment").value!=="Karta")}
-function toggleAddress(){document.getElementById("addressBox").classList.toggle("hidden",document.getElementById("deliveryType").value!=="Yetkazib berish")}
 render();
+resetWizard();
 
 // Buyurtma sanasi: bugundan oldingi kun tanlanmasin
 document.getElementById("wantDate").min=new Date().toISOString().split("T")[0];
