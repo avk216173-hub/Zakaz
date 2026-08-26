@@ -102,6 +102,8 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brown-li
 .link-btn{background:none;color:var(--muted);font-weight:600;font-size:13px;padding:6px 4px;text-decoration:underline;width:auto}
 </style></head><body>
 <header><h1>🥟 Baqachorsu Kishmish Somsa</h1><div>08:00–14:30</div><div>Qo‘qon shahar, Navoiy, Saodat masjid filiali</div>
+<a class="ig-link" href="https://maps.google.com/?q=Qo%27qon+shahar,+Navoiy,+Saodat+masjid+filiali" target="_blank" rel="noopener">📍 Manzilni xaritada ko‘rish</a>
+<a class="ig-link" href="tel:+998944234321" style="margin-left:8px">📞 +998 94 423 43 21</a>
 <a class="ig-link" href="https://instagram.com/kishmish._somsa" target="_blank" rel="noopener">📷 @kishmish._somsa</a>
 </header>
 <main>
@@ -150,7 +152,7 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brown-li
   <div class="hint">Namuna: +998 90 123 45 67 yoki 90 123 45 67</div>
 </div>
 <div class="wizard-step hidden" data-step="3">
-  <div class="pickup-note">🏠 Zakazni <b>Qo‘qon shahar, Navoiy, Saodat masjid filiali</b> manzilidan o‘zingiz olib ketasiz (08:00–14:30).</div>
+  <div class="pickup-note">🏠 Zakazni <b>Qo‘qon shahar, Navoiy, Saodat masjid filiali</b> manzilidan o‘zingiz olib ketasiz (08:00–14:30).<br>🔑 Olib ketayotganda telefon raqamingizning <b>oxirgi 4 ta raqamini</b> ayting.</div>
   <label style="font-weight:bold">To'lov turi</label>
   <div class="pickup-note">💵 Faqat <b>naqd pul</b> bilan to'lov qabul qilinadi (buyurtmani olib ketayotganda).</div>
   <input type="hidden" id="payment" value="Naqd">
@@ -169,7 +171,9 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brown-li
 <section id="track" class="hidden"><div class="box"><h2>📦 Zakazni tekshirish</h2>
 <p>Zakaz berganingizda chiqqan <b>zakaz raqamini</b> kiriting.</p>
 <input id="trackId" placeholder="Zakaz raqami"><button class="order" onclick="trackOrder()">Tekshirish</button>
-<div class="track-result" id="trackResult"></div></div></section>
+<div class="track-result" id="trackResult"></div>
+<div class="pickup-note" style="margin-top:14px">📞 Savollar bo‘lsa qo‘ng‘iroq qiling: <a href="tel:+998944234321" style="color:var(--brown-dark);font-weight:bold">+998 94 423 43 21</a></div>
+</div></section>
 
 <section id="admin" class="hidden"><div class="box" id="loginBox"><h2>🔐 Admin panel</h2>
 <input id="adminEmail" placeholder="Admin email" type="email"><input id="pass" type="password" placeholder="Admin paroli"><button onclick="login()">Kirish</button>
@@ -314,7 +318,7 @@ async function removeImage(i){
 }
 
 function render(){let stock=getStock(),prices=getPrices(),images=getImages();document.getElementById("menu").innerHTML=products.map((p,i)=>{let img=images[i]?`<img src="${images[i]}" style="width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:8px">`:"";return stock[i]?`<div class="card">${img}<h3>${p[0]}</h3><div class="price">${money(prices[i])}</div><div class="controls"><button class="minus" onclick="chg(${i},-1)">−</button><input class="qty" type="number" min="0" value="${cart[i]}" onchange="setQty(${i},this.value)"><button class="plus" onclick="chg(${i},1)">+</button></div></div>`:`<div class="card" style="opacity:.55">${img}<h3>${p[0]}</h3><div class="price">${money(prices[i])}</div><div class="controls"><b style="color:#8b1e16">❌ Tugadi</b></div></div>`}).join("");
-let total=0,s="";products.forEach((p,i)=>{if(cart[i]){let x=cart[i]*prices[i];total+=x;s+=`<div class="row"><span>${p[0]} × ${cart[i]}</span><b>${money(x)}</b></div>`}});document.getElementById("summary").innerHTML=`<h3>Savat</h3>${s||"Savat bo‘sh"}<div class="row total"><span>Jami</span><span>${money(total)}</span></div><div class="pickup-note" style="margin-top:10px">🏠 Olib ketish manzili: ${SHOP_ADDRESS} (08:00–14:30)</div>`}
+let total=0,s="";products.forEach((p,i)=>{if(cart[i]){let x=cart[i]*prices[i];total+=x;s+=`<div class="row"><span>${p[0]} × ${cart[i]}</span><b>${money(x)}</b></div>`}});document.getElementById("summary").innerHTML=`<h3>Savat</h3>${s||"Savat bo‘sh"}<div class="row total"><span>Jami</span><span>${money(total)}</span></div><div class="pickup-note" style="margin-top:10px">🏠 Olib ketish manzili: ${SHOP_ADDRESS} (08:00–14:30)<br>🔑 Olib ketayotganda telefon raqamingizning oxirgi 4 ta raqamini ayting.</div>`}
 function chg(i,n){if(!getStock()[i])return;cart[i]=Math.max(0,cart[i]+n);render()}
 function setQty(i,v){if(!getStock()[i]){cart[i]=0;render();return}let n=parseInt(v);cart[i]=isNaN(n)||n<0?0:n;render()}
 
