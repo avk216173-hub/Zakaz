@@ -235,7 +235,9 @@ async function restPatch(path,value,useAuth){
 /* ================================= */
 
 /* ===== TELEGRAM SOZLAMALARI ===== */
-const TELEGRAM_BOT_TOKEN = "8889089586:AAHc9MWJFj3Qldw6KrgSo5u-46BhTFk4Az0";
+// ⚠️ Pastdagi "YANGI_TOKENINGIZNI_BU_YERGA_YOZING" o'rniga
+// BotFather'dan olgan YANGI tokeningizni yozing (eski, bekor qilingan tokenni emas!)
+const TELEGRAM_BOT_TOKEN = "8889089586:AAGHw6DZQ8jEKygiwVL0jyJbxWOfLVYyPow";
 const TELEGRAM_CHAT_ID   = "6463111231";
 /* ================================= */
 
@@ -353,10 +355,11 @@ function placeOrder(){
   restPut("orders/"+orderId,orderData).then(()=>{
     let o={...orderData,id:orderId};
     sendToTelegram(o);
-    cart.fill(0);render();document.getElementById("name").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Xaridingiz uchun rahmat!<br><br>Zakaz raqamingiz:<br><b style="font-size:18px">${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;
+    cart.fill(0);render();document.getElementById("name").value="";
     document.getElementById("wizNext").disabled=false;
     resetWizard();
     show("shop");
+    document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Xaridingiz uchun rahmat!<br><br>Zakaz raqamingiz:<br><b style="font-size:18px">${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;
   }).catch(err=>{alert("Xato: zakaz yuborilmadi. Internetni tekshirib qayta urinib ko'ring.");console.error(err);document.getElementById("wizNext").disabled=false;});
 }
 
