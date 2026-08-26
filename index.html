@@ -152,12 +152,8 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brown-li
 <div class="wizard-step hidden" data-step="3">
   <div class="pickup-note">🏠 Zakazni <b>Qo‘qon shahar, Navoiy, Saodat masjid filiali</b> manzilidan o‘zingiz olib ketasiz (08:00–14:30).</div>
   <label style="font-weight:bold">To'lov turi</label>
-  <select id="payment" onchange="togglePaymentInfo()"><option>Naqd</option><option>Karta</option></select>
-  <div id="cardInfo" class="hidden" style="background:#fdfaf5;border:1px dashed #8a6a52;border-radius:9px;padding:12px;margin:-4px 0 12px">
-    💳 <b>Karta raqami:</b> 5614 6818 1543 2855<br>
-    👤 <b>Egasi:</b> Abdukarimov Botirjon<br>
-    <span style="font-size:14px">To'lovni shu kartaga o'tkazing, so'ng chekni (skrinshotni) Telegramda <b>@abdukarimov_l</b> ga yuboring.</span>
-  </div>
+  <div class="pickup-note">💵 Faqat <b>naqd pul</b> bilan to'lov qabul qilinadi (buyurtmani olib ketayotganda).</div>
+  <input type="hidden" id="payment" value="Naqd">
 </div>
 <div class="wizard-step hidden" data-step="4">
   <div id="summary"></div>
@@ -357,7 +353,7 @@ function placeOrder(){
   restPut("orders/"+orderId,orderData).then(()=>{
     let o={...orderData,id:orderId};
     sendToTelegram(o);
-    cart.fill(0);render();document.getElementById("name").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Zakaz qabul qilindi!<br>Zakaz raqamingiz: <b>${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;
+    cart.fill(0);render();document.getElementById("name").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Xaridingiz uchun rahmat!<br><br>Zakaz raqamingiz:<br><b style="font-size:18px">${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;
     document.getElementById("wizNext").disabled=false;
     resetWizard();
     show("shop");
@@ -647,12 +643,11 @@ function renderAdmin(){
 </div>`).join("");
   let sum=ordersState.reduce((x,o)=>x+o.total,0);
   document.getElementById("stats").innerHTML=`<div class="box"><b>Zakazlar:</b> ${ordersState.length} &nbsp; <b>Tushum:</b> ${money(sum)}</div>`;
-  document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🏠 Olib ketish: ${o.address||SHOP_ADDRESS}<br>💳 ${o.payment}<hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Tayyor"?"selected":""}>Tayyor</option><option ${o.status=="Olib ketildi"?"selected":""}>Olib ketildi</option></select></div></div>`).join("")||"<p>Hozircha zakaz yo‘q.</p>";
+  document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🏠 Olib ketish: ${o.address||SHOP_ADDRESS}<br>💳 ${o.payment}<hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Olib ketishga tayyor"?"selected":""}>Olib ketishga tayyor</option><option ${o.status=="Rad etildi"?"selected":""}>Rad etildi</option><option ${o.status=="Bajarilmadi"?"selected":""}>Bajarilmadi</option><option ${o.status=="Olib ketildi"?"selected":""}>Olib ketildi</option></select></div></div>`).join("")||"<p>Hozircha zakaz yo‘q.</p>";
 }
 function setStatus(id,v){restPatch("orders/"+id,{status:v}).then(loadOrders).catch(e=>alert("Xato: "+e.message))}
 function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){restPut("orders",null).then(loadOrders).catch(e=>alert("Xato: "+e.message))}}
 
-function togglePaymentInfo(){document.getElementById("cardInfo").classList.toggle("hidden",document.getElementById("payment").value!=="Karta")}
 render();
 resetWizard();
 </script></body></html>
