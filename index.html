@@ -1,46 +1,121 @@
 <!doctype html>
 <html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6b4a37">
 <title>Kishmish Somsa</title>
 <style>
-body{margin:0;font-family:Arial;color:#3a332c;
-  background-color:#f7ede0;
-  background-image:
-    radial-gradient(circle at 15% 20%, rgba(198,140,66,0.16) 0, transparent 45%),
-    radial-gradient(circle at 85% 10%, rgba(139,30,22,0.10) 0, transparent 40%),
-    radial-gradient(circle at 50% 90%, rgba(198,140,66,0.14) 0, transparent 50%),
-    repeating-radial-gradient(circle at center, rgba(139,30,22,0.035) 0, rgba(139,30,22,0.035) 1px, transparent 1px, transparent 22px);
-  background-attachment:fixed;
+:root{
+  --brown-dark:#4a3226;
+  --brown:#6b4a37;
+  --brown-mid:#8a6a52;
+  --brown-light:#c68c42;
+  --bg:#f7ede0;
+  --card:#ffffff;
+  --border:#eae5dd;
+  --text:#3a332c;
+  --muted:#8b7a68;
+  --red:#8b1e16;
+  --green:#3f7d4c;
+  --radius:14px;
 }
-header{background:linear-gradient(135deg,#6b4a37,#4a3226);color:#f7ede0;padding:20px;text-align:center}
-main{max-width:900px;margin:auto;padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-.card,.box{background:#fff;padding:16px;border-radius:12px;border:1px solid #eae5dd;margin-bottom:15px}
-.price{color:#8a6a52;font-weight:bold;font-size:17px}.controls{display:flex;gap:10px;align-items:center;margin-top:12px}
-button{border:0;border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer}.plus,.minus{background:#f1ece3}.order{background:#8a6a52;color:#fff;width:100%;font-size:16px}
-input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid #ddd5c8;border-radius:8px;box-sizing:border-box;background:#fdfcfa}
-.row{display:flex;justify-content:space-between;padding:7px 0}.total{font-size:19px;font-weight:bold;border-top:1px solid #eae5dd;margin-top:8px}
-.nav{display:flex;gap:8px;margin-bottom:15px}.nav button{flex:1;background:#efe9df;color:#3a332c}.hidden{display:none}.orderbox{border-left:3px solid #8a6a52;padding:12px;margin:12px 0;background:#fff;border-radius:0 10px 10px 0}
-.status{font-weight:bold}.danger{background:#f1dcd6;color:#7a3b2e}.success{background:#e4ede2;padding:12px;border-radius:9px;display:none}
-.qty{width:50px;text-align:center;margin:0;padding:8px 4px}
-.wizard-step{margin-bottom:6px}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text);
+  position:relative;
+  min-height:100vh;
+  overflow-x:hidden;
+  line-height:1.4;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  background-image:
+    linear-gradient(180deg, rgba(28,18,12,0.58), rgba(28,18,12,0.74)),
+    url('bg-somsa.jpg');
+  background-size:cover;
+  background-position:center 30%;
+  background-repeat:no-repeat;
+  transform-origin:center;
+  animation:bgZoom 24s ease-in-out infinite alternate;
+  will-change:transform;
+}
+@keyframes bgZoom{
+  0%{transform:scale(1)}
+  100%{transform:scale(1.09)}
+}
+@media (prefers-reduced-motion: reduce){
+  body::before{animation:none}
+}
+header{background:linear-gradient(135deg,var(--brown),var(--brown-dark));color:var(--bg);padding:26px 20px;text-align:center;box-shadow:0 4px 18px rgba(74,50,38,0.25)}
+header h1{margin:0 0 6px;font-size:22px;letter-spacing:.3px}
+header div{font-size:13.5px;opacity:.92}
+.ig-link{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,0.14);padding:7px 14px;border-radius:20px;text-decoration:none;color:#fff;font-size:13.5px;font-weight:600;transition:background .15s ease}
+.ig-link:hover{background:rgba(255,255,255,0.24)}
+main{max-width:900px;margin:auto;padding:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.card,.box{background:var(--card);padding:18px;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:15px;box-shadow:0 2px 10px rgba(74,50,38,0.05)}
+.card{transition:transform .15s ease, box-shadow .15s ease}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(74,50,38,0.12)}
+.price{color:var(--brown-mid);font-weight:bold;font-size:17px;margin-top:2px}
+.controls{display:flex;gap:10px;align-items:center;margin-top:14px}
+button{border:0;border-radius:9px;padding:11px 15px;font-weight:600;cursor:pointer;transition:filter .15s ease, transform .05s ease;font-size:15px}
+button:active{transform:scale(0.97)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.plus,.minus{background:var(--bg);color:var(--brown-dark);width:40px}
+.plus:hover,.minus:hover{filter:brightness(0.95)}
+.order{background:linear-gradient(135deg,var(--brown-mid),var(--brown));color:#fff;width:100%;font-size:16px;box-shadow:0 3px 10px rgba(138,106,82,0.35)}
+.order:hover{filter:brightness(1.06)}
+input,textarea,select{width:100%;padding:12px;margin:5px 0 12px;border:1.5px solid #ddd5c8;border-radius:9px;box-sizing:border-box;background:#fdfcfa;font-size:15px;transition:border-color .15s ease}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brown-light);background:#fff}
+.row{display:flex;justify-content:space-between;padding:7px 0}
+.total{font-size:19px;font-weight:bold;border-top:1px solid var(--border);margin-top:8px;padding-top:10px}
+.nav{display:flex;gap:8px;margin-bottom:15px}
+.nav button{flex:1;background:#efe9df;color:var(--text)}
+.nav button.active{background:var(--brown);color:#fff}
+.hidden{display:none}
+.orderbox{border-left:3px solid var(--brown-mid);padding:14px;margin:12px 0;background:var(--card);border-radius:0 10px 10px 0}
+.status{font-weight:bold}
+.danger{background:#f1dcd6;color:var(--red)}
+.success{background:#e4ede2;padding:14px;border-radius:10px;display:none;border:1px solid #cfe3cf}
+.qty{width:52px;text-align:center;margin:0;padding:8px 4px}
+.wizard-step{margin-bottom:6px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .secondary{background:#efe9df;color:#5c4a3d}
 .track-result{margin-top:12px}
-.loading{text-align:center;padding:20px;color:#8a6a52}
+.loading{text-align:center;padding:20px;color:var(--brown-mid)}
 .gate{max-width:420px;margin:60px auto;padding:0 18px}
 .gate .box{text-align:center}
 .gate-waiting{padding:20px 0}
-.dot-spin{display:inline-block;width:32px;height:32px;border:3px solid #efe9df;border-top-color:#8a6a52;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:14px}
+.dot-spin{display:inline-block;width:32px;height:32px;border:3px solid #efe9df;border-top-color:var(--brown-mid);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:14px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.tg-btn{display:inline-block;background:#4a90c4;color:#fff;text-decoration:none;padding:11px 18px;border-radius:8px;font-weight:600;margin-top:10px}
+.tg-btn{display:inline-block;background:#4a90c4;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:600;margin-top:10px;transition:filter .15s ease}
+.tg-btn:hover{filter:brightness(1.08)}
 .pending-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:8px 0}
+.progress-wrap{margin-bottom:14px}
+.progress-track{height:6px;background:#efe9df;border-radius:5px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--brown-light),var(--brown-mid));border-radius:5px;transition:width .25s ease}
+.progress-label{font-size:12.5px;color:var(--brown-mid);margin-bottom:6px;font-weight:600}
+.pickup-note{background:#fdfaf5;border:1px dashed var(--brown-mid);border-radius:10px;padding:12px;font-size:14px;color:var(--brown-dark);margin-bottom:12px}
+.hint{font-size:12.5px;color:var(--muted);margin:-8px 0 12px}
+.top-actions{display:flex;justify-content:flex-end;margin-bottom:6px}
+.link-btn{background:none;color:var(--muted);font-weight:600;font-size:13px;padding:6px 4px;text-decoration:underline;width:auto}
 </style></head><body>
-<header><h1>🥟 Baqachorsu Kishmish Somsa</h1><div>08:00–14:30</div><div>Qo‘qon shahar, Navoiy, Saodat masjid filiali</div></header>
+<header><h1>🥟 Baqachorsu Kishmish Somsa</h1><div>08:00–14:30</div><div>Qo‘qon shahar, Navoiy, Saodat masjid filiali</div>
+<a class="ig-link" href="https://instagram.com/kishmish._somsa" target="_blank" rel="noopener">📷 @kishmish._somsa</a>
+</header>
 <main>
 
 <div class="gate" id="loginGate">
-  <div class="box" id="gateForm">
+  <div class="box" id="gateChecking">
+    <div class="dot-spin"></div>
+    <p>Tekshirilmoqda...</p>
+  </div>
+  <div class="box hidden" id="gateForm">
     <h2>👋 Xush kelibsiz</h2>
     <p>Ilovadan foydalanish uchun telefon raqamingizni kiriting.</p>
-    <input id="gatePhone" placeholder="+998 90 123 45 67" type="tel">
+    <input id="gatePhone" placeholder="+998 90 123 45 67" type="tel" inputmode="tel">
+    <div class="hint">Namuna: +998 90 123 45 67 yoki 90 123 45 67</div>
     <button class="order" onclick="requestAccess()">Telegram orqali kod olish</button>
   </div>
   <div class="box hidden" id="gateCodeBox">
@@ -48,18 +123,22 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
     <p>Telegram bot (<b>@kishmishsomsa_bot</b>) ochiladi va sizga kod yuboradi. Kodni oling va shu yerga kiriting:</p>
     <p style="font-weight:bold;color:#8b1e16">👇 Pastdagi tugmani albatta o'zingiz bosing (avtomatik ochilmaydi):</p>
     <a class="tg-btn" id="gateTgLink" href="#" target="_blank">📲 Botni ochish (bosing)</a>
-    <input id="gateCode" placeholder="6 xonali kod" type="tel" maxlength="6" style="margin-top:14px">
+    <input id="gateCode" placeholder="6 xonali kod" type="tel" inputmode="numeric" maxlength="6" style="margin-top:14px">
     <button class="order" onclick="confirmCode()">Tasdiqlash</button>
   </div>
 </div>
 
 <div id="appContainer" class="hidden">
-<div class="nav"><button onclick="show('shop')">Zakaz berish</button><button onclick="show('track')">Zakazni tekshirish</button><button onclick="show('admin')">Admin panel</button></div>
+<div class="top-actions"><button class="link-btn" onclick="customerLogout()">🔓 Boshqa raqam bilan kirish</button></div>
+<div class="nav"><button id="navShop" onclick="show('shop')">Zakaz berish</button><button id="navTrack" onclick="show('track')">Zakazni tekshirish</button><button id="navAdmin" onclick="show('admin')">Admin panel</button></div>
 
 <section id="shop"><h2>Somsa tanlang</h2><div class="grid" id="menu"><div class="loading">Yuklanmoqda...</div></div>
 <div class="box" id="orderWizard">
 <h2>Ma’lumotlar</h2>
-<div id="stepIndicator" style="font-size:13px;color:#8a6a52;margin-bottom:10px;font-weight:600"></div>
+<div class="progress-wrap">
+  <div class="progress-label" id="stepIndicator"></div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+</div>
 
 <div class="wizard-step" data-step="1">
   <label style="font-weight:bold">Ismingiz</label>
@@ -67,25 +146,11 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
 </div>
 <div class="wizard-step hidden" data-step="2">
   <label style="font-weight:bold">Telefon raqamingiz</label>
-  <input id="phone" placeholder="Telefon">
+  <input id="phone" placeholder="+998 90 123 45 67" type="tel" inputmode="tel">
+  <div class="hint">Namuna: +998 90 123 45 67 yoki 90 123 45 67</div>
 </div>
 <div class="wizard-step hidden" data-step="3">
-  <label style="font-weight:bold">Qanday olasiz?</label>
-  <select id="deliveryType"><option value="Yetkazib berish">🚗 Yetkazib berish</option><option value="Olib ketish">🏠 O'zim olib ketaman</option></select>
-</div>
-<div class="wizard-step hidden" data-step="4">
-  <label style="font-weight:bold">Manzilingiz</label>
-  <textarea id="address" placeholder="Manzil"></textarea>
-</div>
-<div class="wizard-step hidden" data-step="5">
-  <label style="font-weight:bold">Qaysi sanaga kerak?</label>
-  <input id="wantDate" type="date">
-</div>
-<div class="wizard-step hidden" data-step="6">
-  <label style="font-weight:bold">Qaysi vaqtga kerak?</label>
-  <input id="wantTime" type="time">
-</div>
-<div class="wizard-step hidden" data-step="7">
+  <div class="pickup-note">🏠 Zakazni <b>Qo‘qon shahar, Navoiy, Saodat masjid filiali</b> manzilidan o‘zingiz olib ketasiz (08:00–14:30).</div>
   <label style="font-weight:bold">To'lov turi</label>
   <select id="payment" onchange="togglePaymentInfo()"><option>Naqd</option><option>Karta</option></select>
   <div id="cardInfo" class="hidden" style="background:#fdfaf5;border:1px dashed #8a6a52;border-radius:9px;padding:12px;margin:-4px 0 12px">
@@ -94,7 +159,7 @@ input,textarea,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid
     <span style="font-size:14px">To'lovni shu kartaga o'tkazing, so'ng chekni (skrinshotni) Telegramda <b>@abdukarimov_l</b> ga yuboring.</span>
   </div>
 </div>
-<div class="wizard-step hidden" data-step="8">
+<div class="wizard-step hidden" data-step="4">
   <div id="summary"></div>
 </div>
 
@@ -178,8 +243,26 @@ const TELEGRAM_BOT_TOKEN = "8889089586:AAHc9MWJFj3Qldw6KrgSo5u-46BhTFk4Az0";
 const TELEGRAM_CHAT_ID   = "6463111231";
 /* ================================= */
 
+const SHOP_ADDRESS = "Qo‘qon shahar, Navoiy, Saodat masjid filiali";
+
 const products=[["Mol go‘shtli",12000],["Qo‘y go‘shtli",15000],["Qiymali",6000],["Tovuqli",6000],["Kartoshkali",6000],["Qovoqli",6000],["Olcha kompot (1L)",12000]],cart=products.map(()=>0);
 const money=n=>n.toLocaleString("uz-UZ")+" so‘m";
+
+/* ===== TELEFON RAQAMINI TEKSHIRISH VA TO'G'RILASH ===== */
+// O'zbekiston raqamlari: 998 + 9 xonali, yoki mahalliy 9 xonali (masalan 90 123 45 67)
+function parseUzPhone(raw){
+  if(!raw)return null;
+  let d=raw.replace(/\D/g,"");
+  if(d.length===12&&d.startsWith("998"))d=d.slice(3);
+  else if(d.length===9){/* mahalliy format, o'zgarishsiz */}
+  else return null;
+  if(!/^[0-9]{9}$/.test(d))return null;
+  return d; // 9 xonali mahalliy raqam
+}
+function formatUzPhone(local9){
+  return "+998 "+local9.slice(0,2)+" "+local9.slice(2,5)+" "+local9.slice(5,7)+" "+local9.slice(7,9);
+}
+/* ======================================================= */
 
 // Umumiy (bulutdagi) holat — barcha qurilmalarda bir xil
 let stockState=products.map(()=>true);
@@ -233,7 +316,7 @@ async function removeImage(i){
 }
 
 function render(){let stock=getStock(),prices=getPrices(),images=getImages();document.getElementById("menu").innerHTML=products.map((p,i)=>{let img=images[i]?`<img src="${images[i]}" style="width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:8px">`:"";return stock[i]?`<div class="card">${img}<h3>${p[0]}</h3><div class="price">${money(prices[i])}</div><div class="controls"><button class="minus" onclick="chg(${i},-1)">−</button><input class="qty" type="number" min="0" value="${cart[i]}" onchange="setQty(${i},this.value)"><button class="plus" onclick="chg(${i},1)">+</button></div></div>`:`<div class="card" style="opacity:.55">${img}<h3>${p[0]}</h3><div class="price">${money(prices[i])}</div><div class="controls"><b style="color:#8b1e16">❌ Tugadi</b></div></div>`}).join("");
-let total=0,s="";products.forEach((p,i)=>{if(cart[i]){let x=cart[i]*prices[i];total+=x;s+=`<div class="row"><span>${p[0]} × ${cart[i]}</span><b>${money(x)}</b></div>`}});document.getElementById("summary").innerHTML=`<h3>Savat</h3>${s||"Savat bo‘sh"}<div class="row total"><span>Jami</span><span>${money(total)}</span></div>`}
+let total=0,s="";products.forEach((p,i)=>{if(cart[i]){let x=cart[i]*prices[i];total+=x;s+=`<div class="row"><span>${p[0]} × ${cart[i]}</span><b>${money(x)}</b></div>`}});document.getElementById("summary").innerHTML=`<h3>Savat</h3>${s||"Savat bo‘sh"}<div class="row total"><span>Jami</span><span>${money(total)}</span></div><div class="pickup-note" style="margin-top:10px">🏠 Olib ketish manzili: ${SHOP_ADDRESS} (08:00–14:30)</div>`}
 function chg(i,n){if(!getStock()[i])return;cart[i]=Math.max(0,cart[i]+n);render()}
 function setQty(i,v){if(!getStock()[i]){cart[i]=0;render();return}let n=parseInt(v);cart[i]=isNaN(n)||n<0?0:n;render()}
 
@@ -241,10 +324,8 @@ function buildTelegramText(o){
   let lines=[`🥟 <b>Yangi zakaz #${o.id}</b>`,
     `👤 ${o.name}`,
     `📞 ${o.phone}`,
-    `🚗 ${o.deliveryType}`,
-    o.deliveryType==="Yetkazib berish"?`📍 ${o.address||"—"}`:``,
+    `🏠 Olib ketish: ${SHOP_ADDRESS}`,
     `💳 ${o.payment}`,
-    `⏰ Kerakli sana/vaqt: ${o.wantDate} ${o.wantTime}`,
     ``];
   o.items.forEach(it=>lines.push(`• ${it.name} × ${it.qty} = ${money(it.qty*it.price)}`));
   lines.push(``,`<b>Jami: ${money(o.total)}</b>`,`🕒 ${o.time}`);
@@ -262,52 +343,54 @@ async function sendToTelegram(o){
   }catch(e){console.error("Telegramga ulanishda xato:",e)}
 }
 
-function placeOrder(){let prices=getPrices(),total=cart.reduce((a,q,i)=>a+q*prices[i],0),name=document.getElementById("name").value.trim(),phone=document.getElementById("phone").value.trim(),deliveryType=document.getElementById("deliveryType").value,address=document.getElementById("address").value.trim(),wantDate=document.getElementById("wantDate").value,wantTime=document.getElementById("wantTime").value;if(!total)return alert("Somsa tanlang.");if(!name||!phone)return alert("Ism va telefonni kiriting.");if(deliveryType==="Yetkazib berish"&&!address)return alert("Yetkazib berish uchun manzilni kiriting.");if(!wantDate)return alert("Zakazni qaysi sanaga xohlaysiz — sanani kiriting.");if(!wantTime)return alert("Zakazni qaysi soatga xohlaysiz — vaqtni kiriting.");
-let orderData={name,phone,deliveryType,address,payment:document.getElementById("payment").value,wantDate,wantTime,items:products.map((p,i)=>({name:p[0],qty:cart[i],price:prices[i]})).filter(x=>x.qty),total,status:"Yangi",time:new Date().toLocaleString("uz-UZ"),ts:Date.now()};
-let orderId="o"+Date.now()+Math.random().toString(36).slice(2,8);
-document.getElementById("wizNext").disabled=true;
-restPut("orders/"+orderId,orderData).then(()=>{
-  let o={...orderData,id:orderId};
-  sendToTelegram(o);
-  cart.fill(0);render();document.getElementById("name").value="";document.getElementById("phone").value="";document.getElementById("address").value="";document.getElementById("wantDate").value="";document.getElementById("wantTime").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Zakaz qabul qilindi!<br>Zakaz raqamingiz: <b>${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;
-  document.getElementById("wizNext").disabled=false;
-  resetWizard();
-  show("shop");
-}).catch(err=>{alert("Xato: zakaz yuborilmadi. Internetni tekshirib qayta urinib ko'ring.");console.error(err);document.getElementById("wizNext").disabled=false;});
+function placeOrder(){
+  let prices=getPrices(),total=cart.reduce((a,q,i)=>a+q*prices[i],0);
+  let name=document.getElementById("name").value.trim();
+  let phoneLocal=parseUzPhone(document.getElementById("phone").value);
+  if(!total)return alert("Somsa tanlang.");
+  if(!name)return alert("Ismingizni kiriting.");
+  if(!phoneLocal)return alert("Telefon raqamini to'g'ri kiriting. Namuna: +998 90 123 45 67");
+  let phone=formatUzPhone(phoneLocal);
+  let orderData={name,phone,deliveryType:"Olib ketish",address:SHOP_ADDRESS,payment:document.getElementById("payment").value,items:products.map((p,i)=>({name:p[0],qty:cart[i],price:prices[i]})).filter(x=>x.qty),total,status:"Yangi",time:new Date().toLocaleString("uz-UZ"),ts:Date.now()};
+  let orderId="o"+Date.now()+Math.random().toString(36).slice(2,8);
+  document.getElementById("wizNext").disabled=true;
+  restPut("orders/"+orderId,orderData).then(()=>{
+    let o={...orderData,id:orderId};
+    sendToTelegram(o);
+    cart.fill(0);render();document.getElementById("name").value="";document.getElementById("ok").style.display="block";document.getElementById("ok").innerHTML=`✅ Zakaz qabul qilindi!<br>Zakaz raqamingiz: <b>${o.id}</b><br><small>Holatini tekshirish uchun shu raqamni saqlab qo'ying.</small>`;
+    document.getElementById("wizNext").disabled=false;
+    resetWizard();
+    show("shop");
+  }).catch(err=>{alert("Xato: zakaz yuborilmadi. Internetni tekshirib qayta urinib ko'ring.");console.error(err);document.getElementById("wizNext").disabled=false;});
 }
 
-/* ===== BOSQICHMA-BOSQICH BUYURTMA FORMASI ===== */
-let wizardOrder=[1,2,3,4,5,6,7,8];
+/* ===== BOSQICHMA-BOSQICH BUYURTMA FORMASI (faqat "olib ketish", sana/vaqt so'ralmaydi) ===== */
+let wizardOrder=[1,2,3,4];
 let wizardPos=0;
 
-function computeWizardOrder(){
-  let arr=[1,2,3];
-  if(document.getElementById("deliveryType").value==="Yetkazib berish")arr.push(4);
-  arr.push(5,6,7,8);
-  return arr;
-}
 function showWizardStep(){
   document.querySelectorAll(".wizard-step").forEach(el=>el.classList.add("hidden"));
   let stepNum=wizardOrder[wizardPos];
   document.querySelector(`.wizard-step[data-step="${stepNum}"]`).classList.remove("hidden");
   document.getElementById("stepIndicator").textContent=`Qadam ${wizardPos+1} / ${wizardOrder.length}`;
+  document.getElementById("progressFill").style.width=(((wizardPos+1)/wizardOrder.length)*100)+"%";
   document.getElementById("wizBack").style.display=wizardPos===0?"none":"inline-block";
-  document.getElementById("wizNext").textContent=stepNum===8?"Zakaz berish":"Keyingisi →";
+  document.getElementById("wizNext").textContent=stepNum===4?"Zakaz berish":"Keyingisi →";
   document.getElementById("ok").style.display="none";
 }
 function validateWizardStep(stepNum){
   if(stepNum===1&&!document.getElementById("name").value.trim()){alert("Ismingizni kiriting.");return false}
-  if(stepNum===2&&!document.getElementById("phone").value.trim()){alert("Telefon raqamingizni kiriting.");return false}
-  if(stepNum===4&&!document.getElementById("address").value.trim()){alert("Manzilingizni kiriting.");return false}
-  if(stepNum===5&&!document.getElementById("wantDate").value){alert("Sanani tanlang.");return false}
-  if(stepNum===6&&!document.getElementById("wantTime").value){alert("Vaqtni tanlang.");return false}
+  if(stepNum===2&&!parseUzPhone(document.getElementById("phone").value)){alert("Telefon raqamini to'g'ri kiriting. Namuna: +998 90 123 45 67");return false}
   return true;
 }
 function wizardNext(){
   let stepNum=wizardOrder[wizardPos];
   if(!validateWizardStep(stepNum))return;
-  if(stepNum===8){placeOrder();return}
-  if(stepNum===3)wizardOrder=computeWizardOrder();
+  if(stepNum===2){
+    // telefon raqamini standart formatga keltirib qayta ko'rsatamiz
+    document.getElementById("phone").value=formatUzPhone(parseUzPhone(document.getElementById("phone").value));
+  }
+  if(stepNum===4){placeOrder();return}
   wizardPos++;
   showWizardStep();
 }
@@ -317,7 +400,7 @@ function wizardBack(){
   showWizardStep();
 }
 function resetWizard(){
-  wizardOrder=computeWizardOrder();
+  wizardOrder=[1,2,3,4];
   wizardPos=0;
   showWizardStep();
 }
@@ -330,15 +413,23 @@ function trackOrder(){
   box.innerHTML="Qidirilmoqda...";
   restGet("orders/"+id).then(o=>{
     if(!o){box.innerHTML="❌ Bunday raqamli zakaz topilmadi.";return}
-    box.innerHTML=`<div class="orderbox"><b>#${id}</b> — ${o.time}<br>👤 ${o.name}<br>⏰ Kerakli sana/vaqt: ${o.wantDate} ${o.wantTime}<hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}</div><div class="status">Holat: ${o.status}</div></div>`;
+    box.innerHTML=`<div class="orderbox"><b>#${id}</b> — ${o.time}<br>👤 ${o.name}<br>🏠 Olib ketish: ${o.address||SHOP_ADDRESS}<hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}</div><div class="status">Holat: ${o.status}</div></div>`;
   }).catch(()=>{box.innerHTML="❌ Qidirishda xato. Internetni tekshiring."});
 }
 
-function show(id){document.getElementById("shop").classList.toggle("hidden",id!=="shop");document.getElementById("track").classList.toggle("hidden",id!=="track");document.getElementById("admin").classList.toggle("hidden",id!=="admin")}
+function show(id){
+  document.getElementById("shop").classList.toggle("hidden",id!=="shop");
+  document.getElementById("track").classList.toggle("hidden",id!=="track");
+  document.getElementById("admin").classList.toggle("hidden",id!=="admin");
+  document.getElementById("navShop").classList.toggle("active",id==="shop");
+  document.getElementById("navTrack").classList.toggle("active",id==="track");
+  document.getElementById("navAdmin").classList.toggle("active",id==="admin");
+}
 
 /* ===== MIJOZ KIRISH DARVOZASI (Telegram bot orqali kod — oddiy HTTPS so'rovlar orqali, WebSocket'siz) ===== */
 let gatePollId=null,currentPhoneKey=null;
 const GATE_BOT="tasdiqlasomsa_bot";
+const SESSION_KEY="somsaCustomerPhone"; // localStorage kaliti — mijozni saqlab qolish uchun
 
 function genCode(){return String(Math.floor(100000+Math.random()*900000))}
 
@@ -350,10 +441,11 @@ window.onerror=function(msg,src,line,col,err){
 function requestAccess(){
  try{
   let phoneRaw=document.getElementById("gatePhone").value.trim();
-  if(!phoneRaw)return alert("Telefon raqamingizni kiriting.");
-  let key=phoneRaw.replace(/\D/g,"");
-  if(key.length<9)return alert("Telefon raqamini to‘g‘ri kiriting.");
-  currentPhoneKey=key;
+  let local9=parseUzPhone(phoneRaw);
+  if(!local9)return alert("Telefon raqamini to'g'ri kiriting. Namuna: +998 90 123 45 67");
+  let formatted=formatUzPhone(local9);
+  document.getElementById("gatePhone").value=formatted;
+  currentPhoneKey="998"+local9;
   let btn=document.querySelector('#gateForm button');
   btn.disabled=true;btn.textContent="Yuborilmoqda...";
   let code=genCode();
@@ -363,16 +455,16 @@ function requestAccess(){
     btn.disabled=false;btn.textContent="Telegram orqali kod olish";
     alert("Ulanish juda uzoq davom etyapti. Internetni tekshirib qayta urinib ko'ring.");
   },10000);
-  restPut("verifications/"+key,{phone:phoneRaw,code,verified:false,requestedAt:Date.now()}).then(()=>{
+  restPut("verifications/"+currentPhoneKey,{phone:formatted,code,verified:false,requestedAt:Date.now()}).then(()=>{
     if(timedOut)return;
     clearTimeout(timeoutId);
     btn.disabled=false;btn.textContent="Telegram orqali kod olish";
     document.getElementById("gateForm").classList.add("hidden");
     document.getElementById("gateCodeBox").classList.remove("hidden");
-    let tgUrl="https://t.me/"+GATE_BOT+"?start="+key;
+    let tgUrl="https://t.me/"+GATE_BOT+"?start="+currentPhoneKey;
     document.getElementById("gateTgLink").href=tgUrl;
     document.getElementById("gateTgLink").textContent="📲 Botni ochish (bosing)";
-    startVerificationPolling(key);
+    startVerificationPolling(currentPhoneKey);
   }).catch(err=>{
     if(timedOut)return;
     clearTimeout(timeoutId);
@@ -396,7 +488,7 @@ function confirmCode(){
     if(String(v.code)!==code){confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";alert("Kod noto‘g‘ri. Qaytadan kiriting.");return}
     return restPatch("verifications/"+currentPhoneKey,{verified:true}).then(()=>{
       confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";
-      unlockApp();
+      unlockApp(currentPhoneKey);
     });
   }).catch(err=>{
     confirmBtn.disabled=false;confirmBtn.textContent="Tasdiqlash";
@@ -410,16 +502,60 @@ function startVerificationPolling(key){
     restGet("verifications/"+key).then(v=>{
       if(v&&v.verified){
         clearInterval(gatePollId);
-        unlockApp();
+        unlockApp(key);
       }
     }).catch(()=>{});
   },3000);
 }
 
-function unlockApp(){
+// Mijoz tasdiqlangach — sessiyani saqlab qo'yamiz, keyingi safar qayta login so'ralmaydi
+function unlockApp(phoneKey){
+  if(gatePollId){clearInterval(gatePollId);gatePollId=null}
+  try{localStorage.setItem(SESSION_KEY,phoneKey)}catch(e){console.warn("localStorage yozib bo'lmadi:",e)}
   document.getElementById("loginGate").classList.add("hidden");
   document.getElementById("appContainer").classList.remove("hidden");
+  // Buyurtma formasidagi telefon raqamini avtomatik to'ldiramiz
+  let local9=phoneKey.length===12?phoneKey.slice(3):phoneKey;
+  let phoneField=document.getElementById("phone");
+  if(phoneField&&!phoneField.value)phoneField.value=formatUzPhone(local9);
+  show("shop");
 }
+
+function customerLogout(){
+  try{localStorage.removeItem(SESSION_KEY)}catch(e){}
+  currentPhoneKey=null;
+  document.getElementById("appContainer").classList.add("hidden");
+  document.getElementById("loginGate").classList.remove("hidden");
+  document.getElementById("gateChecking").classList.add("hidden");
+  document.getElementById("gateCodeBox").classList.add("hidden");
+  document.getElementById("gateForm").classList.remove("hidden");
+  document.getElementById("gatePhone").value="";
+  document.getElementById("gateCode").value="";
+}
+
+// Sahifa ochilganda: avval saqlangan sessiya bor-yo'qligini tekshiramiz
+async function checkExistingSession(){
+  let saved=null;
+  try{saved=localStorage.getItem(SESSION_KEY)}catch(e){}
+  if(!saved){
+    document.getElementById("gateChecking").classList.add("hidden");
+    document.getElementById("gateForm").classList.remove("hidden");
+    return;
+  }
+  try{
+    let v=await restGet("verifications/"+saved);
+    if(v&&v.verified){
+      currentPhoneKey=saved;
+      unlockApp(saved);
+      return;
+    }
+  }catch(e){console.error("Sessiya tekshirishda xato:",e)}
+  // Sessiya endi haqiqiy emas (masalan admin bekor qilgan) — qaytadan login so'raymiz
+  try{localStorage.removeItem(SESSION_KEY)}catch(e){}
+  document.getElementById("gateChecking").classList.add("hidden");
+  document.getElementById("gateForm").classList.remove("hidden");
+}
+checkExistingSession();
 /* =================================== */
 
 function login(){
@@ -511,7 +647,7 @@ function renderAdmin(){
 </div>`).join("");
   let sum=ordersState.reduce((x,o)=>x+o.total,0);
   document.getElementById("stats").innerHTML=`<div class="box"><b>Zakazlar:</b> ${ordersState.length} &nbsp; <b>Tushum:</b> ${money(sum)}</div>`;
-  document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🚗 ${o.deliveryType||"—"}${o.deliveryType==="Yetkazib berish"?`<br>📍 ${o.address||"—"}`:""}<br>💳 ${o.payment}<br>⏰ Kerakli sana/vaqt: <b>${o.wantDate||"—"} ${o.wantTime||""}</b><hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Yetkazilmoqda"?"selected":""}>Yetkazilmoqda</option><option ${o.status=="Yetkazildi"?"selected":""}>Yetkazildi</option></select></div></div>`).join("")||"<p>Hozircha zakaz yo‘q.</p>";
+  document.getElementById("orders").innerHTML=ordersState.map(o=>`<div class="orderbox"><b>#${o.id}</b> — ${o.time}<br>👤 ${o.name}<br>📞 ${o.phone}<br>🏠 Olib ketish: ${o.address||SHOP_ADDRESS}<br>💳 ${o.payment}<hr>${o.items.map(x=>`${x.name} × ${x.qty}`).join("<br>")}<div class="row total">${money(o.total)}<select onchange="setStatus('${o.id}',this.value)"><option ${o.status=="Yangi"?"selected":""}>Yangi</option><option ${o.status=="Tayyorlanmoqda"?"selected":""}>Tayyorlanmoqda</option><option ${o.status=="Tayyor"?"selected":""}>Tayyor</option><option ${o.status=="Olib ketildi"?"selected":""}>Olib ketildi</option></select></div></div>`).join("")||"<p>Hozircha zakaz yo‘q.</p>";
 }
 function setStatus(id,v){restPatch("orders/"+id,{status:v}).then(loadOrders).catch(e=>alert("Xato: "+e.message))}
 function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){restPut("orders",null).then(loadOrders).catch(e=>alert("Xato: "+e.message))}}
@@ -519,7 +655,4 @@ function clearOrders(){if(confirm("Barcha zakazlar o‘chirilsinmi?")){restPut("
 function togglePaymentInfo(){document.getElementById("cardInfo").classList.toggle("hidden",document.getElementById("payment").value!=="Karta")}
 render();
 resetWizard();
-
-// Buyurtma sanasi: bugundan oldingi kun tanlanmasin
-document.getElementById("wantDate").min=new Date().toISOString().split("T")[0];
 </script></body></html>
